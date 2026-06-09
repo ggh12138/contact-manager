@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>合同管理系统</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background:#f0f2f5; color:#333; min-height:100vh; }
@@ -306,6 +306,13 @@ tr.clickable { cursor:pointer; }
 
 <script>
 // ==================== DATA ====================
+/* ===== Supabase 初始化 ===== */
+const SUPABASE_URL = 'https://yxvcutlwxwhvhinnjjoj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmN1dGx3eHdodmhpbm5qam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA5ODYsImV4cCI6MjA5NjU1Njk4Nn0.6DArPpTIUZbGRhuOHRJjloWJRMdmsh2h9i3VIvMVBn8';
+
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const APP_DATA_ID = 'contracts';
+/* =========================== */
 let contracts = [];
 const TODAY = new Date();
 const TODAY_DATE = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
@@ -556,28 +563,64 @@ function recalcContracts(contracts) {
 // ==================== PERSISTENCE ====================
 const STORAGE_KEY = 'contract_manager_data';
 
+/* ===== 云端保存 ===== */
 function saveData() {
   try {
-    const data = contracts.map(c => ({
-      id: c.id, name: c.name, company: c.company, totalAmount: c.totalAmount,
-      status: c.status, startDate: c.startDate, endDate: c.endDate, nodes: c.nodes
+    const payload = contracts.map(c => ({
+      id: c.id,
+      name: c.name,
+      company: c.company,
+      totalAmount: c.totalAmount,
+      status: c.status,
+      startDate: c.startDate,
+      endDate: c.endDate,
+      nodes: (c.nodes || []).map(n => ({
+        id: n.id, name: n.name, amount: n.amount,
+        invoiced: n.invoiced, received: n.received,
+        planDate: n.planDate, actualDate: n.actualDate
+      }))
     }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch(e) { /* localStorage full or unavailable */ }
-}
 
-function loadData() {
+    _sb.from('app_data')
+      .update({ data: payload, updated_at: new Date() })
+      .eq('id', APP_DATA_ID)
+      .then(({ error }) => {
+        if (error) console.warn('[save error]', error);
+        // 兜底：本地也存一份备份
+        try { localStorage.setItem('_cm_backup', JSON.stringify(payload)); } catch(e){}
+      });
+  } catch(e) { console.warn(e); }
+}
+async function loadData() {
+  // 1) 先试云端
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      contracts = recalcContracts(data);
-      return true;
-    }
-  } catch(e) { /* corrupted data, fall through */ }
-  return false;
-}
+    const { data, error } = await _sb
+      .from('app_data')
+      .select('data')
+      .eq('id', APP_DATA_ID)
+      .maybeSingle();
 
+    if (!error && data && Array.isArray(data.data)) {
+      contracts = (data.data || []).map(c => recalcContract(c));
+      filterAndRender();
+      return;
+    }
+  } catch(e) {}
+
+  // 2) 兜底：从本地备份恢复一次并写回云端
+  try {
+    const raw = localStorage.getItem('_cm_backup');
+    if (raw) {
+      contracts = JSON.parse(raw).map(c => recalcContract(c));
+      filterAndRender();
+      saveData(); // 同步回云端
+      return;
+    }
+  } catch(e){}
+
+  contracts = [];
+  filterAndRender();
+}
 // ==================== INIT ====================
 let currentFilter = 'all';
 let currentSearch = '';
