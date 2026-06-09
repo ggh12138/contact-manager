@@ -481,7 +481,7 @@ function ContractForm({ contract, onSubmit, onCancel, loading }) {
             <input value={form.contract_name} onChange={handleChange('contract_name')} placeholder="请输入合同名称" />
           </div>
           <div className="form-group">
-            <label>合同编号 *</label>
+            <label>合同序号 *</label>
             <input value={form.contract_no} onChange={handleChange('contract_no')} placeholder="请输入合同编号" />
           </div>
           <div className="form-group">
@@ -493,7 +493,7 @@ function ContractForm({ contract, onSubmit, onCancel, loading }) {
             <input value={form.party_b} onChange={handleChange('party_b')} placeholder="乙方名称" />
           </div>
           <div className="form-group">
-            <label>合同金额 (¥) *</label>
+            <label>合同金额 (万元) *</label>
             <input value={form.amount} onChange={handleChange('amount')} placeholder="0.00" type="number" step="0.01" min="0" />
           </div>
           <div className="form-group">
@@ -542,8 +542,12 @@ function App() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [realtimeStatus, setRealtimeStatus] = useState('connected');
+  const [importTargets, setImportTargets] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const { toasts, addToast, removeToast } = useToast();
   const channelRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // ---- Fetch contracts ----
   const fetchContracts = useCallback(async () => {
@@ -731,11 +735,10 @@ function App() {
 
   // ---- Export CSV ----
   const exportCSV = () => {
-    const headers = ['合同名称', '合同编号', '甲方', '乙方', '金额(¥)', '签订日期', '结束日期', '状态', '备注'];
+    const headers = ['合同名称', '合同编号', '对方单位', '金额(万元)', '签订日期', '结束日期', '状态', '备注'];
     const rows = filteredContracts.map(c => [
       c.contract_name,
       c.contract_no,
-      c.party_a,
       c.party_b,
       c.amount,
       c.sign_date,
@@ -760,11 +763,105 @@ function App() {
   // ---- Format helpers ----
   const fmtAmount = (v) => {
     const n = Number(v) || 0;
-    return '¥ ' + n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 万元';
   };
   const fmtDate = (d) => d ? d.slice(0, 10) : '-';
 
-  // ---- Loading ----
+  // ---- CSV Parse helpers ----
+  const parseCSVLine = (line) => {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  const convDate = (s) => {
+    if (!s) return '';
+    const parts = s.split('/');
+    if (parts.length === 3) {
+      return `${parts[0].padStart(4,'0')}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+    }
+    return s;
+  };
+
+  // ---- Handle file selection for import ----
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) {
+        addToast('CSV文件为空或格式不正确', 'error');
+        return;
+      }
+      // Group by contract index (col 0)
+      const contractMap = {};
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseCSVLine(lines[i]);
+        if (row.length < 5) continue;
+        const idx = row[0].trim();
+        if (!idx) continue;
+        if (!contractMap[idx]) {
+          const rawStatus = (row[4] || '').trim();
+          contractMap[idx] = {
+            contract_no: idx,
+            contract_name: (row[1] || '').trim(),
+            party_b: (row[2] || '').trim(),
+            amount: parseFloat(row[3]) || 0,
+            status: rawStatus === '已完成' ? '已结束' : '进行中',
+            sign_date: convDate((row[5] || '').trim()),
+            end_date: convDate((row[6] || '').trim()),
+            notes: (row[12] || '').trim()
+          };
+        }
+      }
+      const list = Object.values(contractMap);
+      if (list.length === 0) {
+        addToast('未解析到有效合同数据', 'error');
+        return;
+      }
+      setImportTargets(list);
+    };
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+  };
+
+  // ---- Execute import ----
+  const handleImportConfirm = async () => {
+    if (!importTargets || importTargets.length === 0) return;
+    setImporting(true);
+    setImportProgress(0);
+    let success = 0, fail = 0;
+    for (let i = 0; i < importTargets.length; i++) {
+      const c = importTargets[i];
+      try {
+        const { error } = await supabase.from('contracts').insert([c]);
+        if (error) {
+          if (error.code === '23505') { fail++; }
+          else { fail++; }
+        } else { success++; }
+      } catch { fail++; }
+      setImportProgress(i + 1);
+    }
+    setImportTargets(null);
+    setImporting(false);
+    addToast(`导入完成：成功 ${success} 条${fail > 0 ? `，跳过/失败 ${fail} 条` : ''}`, fail > 0 && success === 0 ? 'error' : 'success');
+  };
   if (loading) {
     return (
       <div className="loading-spinner">
@@ -807,7 +904,7 @@ function App() {
           <div className="stat-card">
             <div className="label">合同总金额</div>
             <div className="value" style={{ color: '#1677ff' }}>{fmtAmount(stats.totalAmount)}</div>
-            <div className="sub">总金额</div>
+            <div className="sub">万元</div>
           </div>
           <div className="stat-card">
             <div className="label">进行中合同</div>
@@ -817,7 +914,7 @@ function App() {
           <div className="stat-card">
             <div className="label">进行中金额</div>
             <div className="value" style={{ color: '#1677ff' }}>{fmtAmount(stats.activeAmount)}</div>
-            <div className="sub">进行中合同金额</div>
+            <div className="sub">进行中合同金额（万元）</div>
           </div>
         </div>
 
@@ -825,7 +922,7 @@ function App() {
         <div className="toolbar">
           <input
             className="search-box"
-            placeholder="搜索合同名称、编号、甲方、乙方..."
+            placeholder="搜索合同名称、编号、对方单位..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -834,7 +931,9 @@ function App() {
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <button className="btn btn-primary" onClick={openAdd}>+ 添加合同</button>
+          <button className="btn btn-success" onClick={() => fileInputRef.current?.click()}>导入CSV</button>
           <button className="btn btn-outline" onClick={exportCSV}>导出CSV</button>
+          <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileSelect} />
         </div>
 
         {/* Table */}
@@ -854,8 +953,8 @@ function App() {
                   <th onClick={() => handleSort('contract_name')}>合同名称{sortIcon('contract_name')}</th>
                   <th onClick={() => handleSort('contract_no')}>合同编号{sortIcon('contract_no')}</th>
                   <th onClick={() => handleSort('party_a')}>甲方{sortIcon('party_a')}</th>
-                  <th onClick={() => handleSort('party_b')}>乙方{sortIcon('party_b')}</th>
-                  <th onClick={() => handleSort('amount')} style={{ textAlign: 'right' }}>金额{sortIcon('amount')}</th>
+                  <th onClick={() => handleSort('party_b')}>对方单位{sortIcon('party_b')}</th>
+                  <th onClick={() => handleSort('amount')} style={{ textAlign: 'right' }}>金额(万元){sortIcon('amount')}</th>
                   <th onClick={() => handleSort('sign_date')}>签订日期{sortIcon('sign_date')}</th>
                   <th onClick={() => handleSort('status')}>状态{sortIcon('status')}</th>
                   <th style={{ width: 100 }}>操作</th>
@@ -939,6 +1038,52 @@ function App() {
           onCancel={() => setDeleteTarget(null)}
           loading={deleting}
         />
+      )}
+
+      {/* Import Preview Dialog */}
+      {importTargets && (
+        <div className="modal-overlay" onClick={() => { if (!importing) setImportTargets(null); }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+            <div className="modal-header">
+              <h2>导入合同预览</h2>
+              <button className="modal-close" onClick={() => { if (!importing) setImportTargets(null); }}>×</button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '50vh', overflowY: 'auto', padding: '12px 20px' }}>
+              <p style={{ marginBottom: 12, fontSize: 14, color: '#666' }}>
+                将从CSV中导入 <strong>{importTargets.length}</strong> 份合同（按合同序号去重）。
+                已存在的合同编号会自动跳过。
+              </p>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#fafafa' }}>
+                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>序号</th>
+                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>合同名称</th>
+                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>对方单位</th>
+                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>金额(万元)</th>
+                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importTargets.map((c, idx) => (
+                    <tr key={c.contract_no}>
+                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.contract_no}</td>
+                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.contract_name}</td>
+                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.party_b}</td>
+                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.amount.toFixed(2)}</td>
+                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}><span className={`status-tag ${STATUS_COLORS[c.status]}`}>{c.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setImportTargets(null)} disabled={importing}>取消</button>
+              <button className="btn btn-success" onClick={handleImportConfirm} disabled={importing}>
+                {importing ? `正在导入 (${importProgress}/${importTargets.length})...` : `确认导入 ${importTargets.length} 份合同`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
