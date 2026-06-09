@@ -638,6 +638,8 @@ function App() {
   const [importTargets, setImportTargets] = useState(null);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
+  const [clearStep, setClearStep] = useState(0); // 0=hidden, 1=first confirm, 2=type YES
+  const [clearing, setClearing] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
   const channelRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -745,6 +747,20 @@ function App() {
       setDeleteTarget(null);
     } catch (err) { addToast('删除失败: ' + err.message, 'error'); }
     finally { setDeleting(false); }
+  };
+
+  // ---- Clear All ----
+  const [clearConfirmText, setClearConfirmText] = useState('');
+  const handleClearAll = async () => {
+    setClearing(true);
+    try {
+      const { error } = await supabase.from('contracts').delete().neq('id', 0);
+      if (error) throw error;
+      addToast('所有合同已清除', 'success');
+      setClearStep(0);
+      setClearConfirmText('');
+    } catch (err) { addToast('清除失败: ' + err.message, 'error'); }
+    finally { setClearing(false); }
   };
 
   // ---- Export ----
@@ -935,6 +951,7 @@ function App() {
           </select>
           <button className="btn btn-primary" onClick={() => { setEditingContract(null); setShowModal(true); }}>+ 添加合同</button>
           <button className="btn btn-success" onClick={() => fileInputRef.current?.click()}>导入CSV</button>
+          <button className="btn btn-danger" onClick={() => setClearStep(1)} disabled={contracts.length === 0}>清除所有</button>
           <button className="btn btn-outline" onClick={exportCSV}>导出CSV</button>
           <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileSelect} />
         </div>
@@ -1026,6 +1043,50 @@ function App() {
           title="确认删除" loading={deleting}
           message={`确定删除"${deleteTarget.contract_name}"（序号: ${deleteTarget.contract_no}）？不可恢复。`}
           onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+      )}
+
+      {/* Clear All - Step 1 */}
+      {clearStep === 1 && (
+        <div className="confirm-overlay" onClick={() => { setClearStep(0); setClearConfirmText(''); }}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: '#ff4d4f' }}>⚠️ 清除所有合同</h3>
+            <p>确定要清除全部 <strong>{contracts.length}</strong> 份合同吗？此操作<b style={{ color: '#ff4d4f' }}>不可恢复</b>。</p>
+            <div className="btns">
+              <button className="btn btn-outline" onClick={() => { setClearStep(0); setClearConfirmText(''); }}>取消</button>
+              <button className="btn btn-danger" onClick={() => setClearStep(2)}>下一步</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All - Step 2 */}
+      {clearStep === 2 && (
+        <div className="confirm-overlay" onClick={() => { if (!clearing) { setClearStep(0); setClearConfirmText(''); } }}>
+          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: '#ff4d4f' }}>⚠️ 二次确认</h3>
+            <p style={{ marginBottom: 12 }}>
+              请输入 <b style={{ color: '#ff4d4f', fontSize: 18 }}>YES</b> 确认清除全部 <strong>{contracts.length}</strong> 份合同
+            </p>
+            <input
+              value={clearConfirmText}
+              onChange={e => setClearConfirmText(e.target.value)}
+              placeholder="请输入 YES"
+              style={{
+                width: '100%', padding: '10px 14px', fontSize: 18, textAlign: 'center',
+                border: '2px solid #ff4d4f', borderRadius: 6, outline: 'none',
+                marginBottom: 16, fontWeight: 'bold', letterSpacing: 4
+              }}
+              disabled={clearing}
+              autoFocus
+            />
+            <div className="btns">
+              <button className="btn btn-outline" onClick={() => { setClearStep(0); setClearConfirmText(''); }} disabled={clearing}>取消</button>
+              <button className="btn btn-danger" onClick={handleClearAll} disabled={clearConfirmText !== 'YES' || clearing}>
+                {clearing ? '清除中...' : `确认清除全部 ${contracts.length} 份合同`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Import Preview */}
