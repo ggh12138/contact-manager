@@ -314,6 +314,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 /* =========================== */
 let contracts = [];
+let filterStatus = 'all';     // 默认显示所有状态
+let searchKeyword = '';       // 默认搜索关键词为空
+let sortField = 'endDate';    // 默认排序字段（例如按截止日期）
+let sortDir = 'desc';         // 默认排序方向（降序）
 const TODAY = new Date();
 const TODAY_DATE = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
 
