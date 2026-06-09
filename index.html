@@ -44,8 +44,6 @@ body {
 .header h1 { font-size: 20px; font-weight: 600; }
 .header span { font-size: 13px; opacity: 0.85; }
 .container { max-width: 1400px; margin: 0 auto; padding: 16px 20px; }
-
-/* Stats Cards */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -63,7 +61,6 @@ body {
 .stat-card .value { font-size: 24px; font-weight: 700; }
 .stat-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
-/* Toolbar */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -118,24 +115,24 @@ body {
 .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
 
-/* Table */
 .table-wrapper {
   background: var(--card-bg);
   border-radius: 8px;
   border: 1px solid var(--border);
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .table-wrapper table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 1100px;
 }
 .table-wrapper th {
   background: #fafafa;
-  padding: 12px 14px;
+  padding: 10px 10px;
   text-align: left;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -144,13 +141,13 @@ body {
 }
 .table-wrapper th:hover { background: #f0f0f0; }
 .table-wrapper td {
-  padding: 11px 14px;
-  font-size: 14px;
+  padding: 9px 10px;
+  font-size: 13px;
   border-bottom: 1px solid #f0f0f0;
 }
 .table-wrapper tr:hover td { background: #fafafa; }
 .table-wrapper tr:last-child td { border-bottom: none; }
-.amount-cell { font-weight: 600; text-align: right; font-family: 'Courier New', monospace; }
+.amount-cell { font-weight: 600; text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
 
 .status-tag {
   display: inline-block;
@@ -163,10 +160,8 @@ body {
 .status-ended { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; }
 .status-terminated { background: #fff2f0; color: #cf1322; border: 1px solid #ffa39e; }
 .status-pending { background: #fffbe6; color: #d46b08; border: 1px solid #ffe58f; }
-
 .action-btns { display: flex; gap: 4px; }
 
-/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -181,18 +176,23 @@ body {
   background: var(--card-bg);
   border-radius: 12px;
   width: 90%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 8px 40px rgba(0,0,0,0.12);
   animation: slideUp 0.2s;
 }
+.modal-wide { max-width: 900px; }
 .modal-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  z-index: 1;
 }
 .modal-header h2 { font-size: 17px; font-weight: 600; }
 .modal-close {
@@ -213,7 +213,6 @@ body {
   justify-content: flex-end;
   gap: 8px;
 }
-
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -234,8 +233,37 @@ body {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
 }
+.form-group .readonly-input {
+  background: #f9f9f9;
+  color: #999;
+}
 
-/* Pagination */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.info-item {}
+.info-item .info-label { font-size: 12px; color: #999; margin-bottom: 2px; }
+.info-item .info-value { font-size: 14px; font-weight: 500; }
+
+.milestone-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+.milestone-table th {
+  background: #fafafa;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.milestone-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.milestone-table tr:last-child td { border-bottom: none; }
+
 .pagination {
   display: flex;
   justify-content: flex-end;
@@ -256,13 +284,8 @@ body {
 }
 .pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
 .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-.pagination .active-page {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
+.pagination .active-page { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-/* Real-time indicator */
 .realtime-badge {
   display: inline-flex;
   align-items: center;
@@ -271,27 +294,16 @@ body {
   padding: 4px 12px;
   border-radius: 12px;
 }
-.realtime-badge.connected { background: #f6ffed; color: #389e0d; }
+.realtime-badge.connected { background: rgba(255,255,255,0.2); color: #fff; }
 .realtime-badge.disconnected { background: #fff2f0; color: #cf1322; }
-.realtime-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-.realtime-badge.connected .realtime-dot { background: #52c41a; }
+.realtime-dot { width: 6px; height: 6px; border-radius: 50%; }
+.realtime-badge.connected .realtime-dot { background: #95de64; }
 .realtime-badge.disconnected .realtime-dot { background: #ff4d4f; }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-secondary);
-}
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
 .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 14px; }
 
-/* Toast / Notification */
 .toast-container {
   position: fixed;
   top: 80px;
@@ -314,7 +326,6 @@ body {
 .toast.error { background: var(--danger); }
 .toast.info { background: var(--primary); }
 
-/* Confirm dialog */
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -336,16 +347,9 @@ body {
 .confirm-dialog p { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
 .confirm-dialog .btns { display: flex; gap: 8px; justify-content: center; }
 
-/* Loading */
-.loading-spinner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-}
+.loading-spinner { display: flex; align-items: center; justify-content: center; padding: 60px; }
 .spinner {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   border: 3px solid var(--border);
   border-top-color: var(--primary);
   border-radius: 50%;
@@ -355,15 +359,15 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) {
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid, .info-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .toolbar { flex-direction: column; }
   .toolbar .search-box { width: 100%; }
   .header h1 { font-size: 16px; }
+  .table-wrapper { overflow-x: auto; }
 }
 </style>
 </head>
@@ -378,33 +382,21 @@ const SUPABASE_URL = 'https://yxvcutlwxwhvhinnjjoj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmN1dGx3eHdodmhpbm5qam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA5ODYsImV4cCI6MjA5NjU1Njk4Nn0.6DArPpTIUZbGRhuOHRJjloWJRMdmsh2h9i3VIvMVBn8';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ============ Status Options ============
 const STATUS_OPTIONS = ['进行中', '已结束', '已终止', '待签署'];
 const STATUS_COLORS = {
-  '进行中': 'status-active',
-  '已结束': 'status-ended',
-  '已终止': 'status-terminated',
-  '待签署': 'status-pending'
+  '进行中': 'status-active', '已结束': 'status-ended',
+  '已终止': 'status-terminated', '待签署': 'status-pending'
 };
 
-// ============ Toast Component ============
+// ============ Toast ============
 function Toast({ message, type, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
+  useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
   return <div className={`toast ${type}`}>{message}</div>;
 }
-
 function useToast() {
   const [toasts, setToasts] = useState([]);
-  const addToast = useCallback((message, type = 'info') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-  }, []);
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const addToast = useCallback((m, t = 'info') => { setToasts(p => [...p, { id: Date.now(), message: m, type: t }]); }, []);
+  const removeToast = useCallback((id) => { setToasts(p => p.filter(x => x.id !== id)); }, []);
   return { toasts, addToast, removeToast };
 }
 
@@ -413,13 +405,99 @@ function ConfirmDialog({ title, message, onConfirm, onCancel, loading }) {
   return (
     <div className="confirm-overlay" onClick={loading ? undefined : onCancel}>
       <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-        <h3>{title}</h3>
-        <p>{message}</p>
+        <h3>{title}</h3><p>{message}</p>
         <div className="btns">
           <button className="btn btn-outline" onClick={onCancel} disabled={loading}>取消</button>
-          <button className="btn btn-danger" onClick={onConfirm} disabled={loading}>
-            {loading ? '处理中...' : '确认删除'}
-          </button>
+          <button className="btn btn-danger" onClick={onConfirm} disabled={loading}>{loading ? '处理中...' : '确认删除'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ Format Helpers ============
+const fmtAmount = (v) => {
+  const n = Number(v) || 0;
+  return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 万元';
+};
+const fmtDate = (d) => d ? d.slice(0, 10) : '-';
+
+// ============ Detail Modal ============
+function ContractDetail({ contract, onClose }) {
+  const milestones = contract.milestones || [];
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>合同详情</h2>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+        <div className="modal-body">
+          {/* 基本信息 */}
+          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>基本信息</h4>
+          <div className="info-grid">
+            <div className="info-item"><div className="info-label">合同名称</div><div className="info-value">{contract.contract_name}</div></div>
+            <div className="info-item"><div className="info-label">合同序号</div><div className="info-value">{contract.contract_no}</div></div>
+            <div className="info-item"><div className="info-label">甲方</div><div className="info-value">{contract.party_a || '-'}</div></div>
+            <div className="info-item"><div className="info-label">对方单位</div><div className="info-value">{contract.party_b || '-'}</div></div>
+            <div className="info-item"><div className="info-label">合同金额</div><div className="info-value" style={{ color: '#1677ff' }}>{fmtAmount(contract.amount)}</div></div>
+            <div className="info-item"><div className="info-label">状态</div><div className="info-value"><span className={`status-tag ${STATUS_COLORS[contract.status]}`}>{contract.status}</span></div></div>
+            <div className="info-item"><div className="info-label">签订日期</div><div className="info-value">{fmtDate(contract.sign_date)}</div></div>
+            <div className="info-item"><div className="info-label">结束日期</div><div className="info-value">{fmtDate(contract.end_date)}</div></div>
+          </div>
+
+          {/* 财务汇总 */}
+          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>财务汇总</h4>
+          <div className="info-grid">
+            <div className="info-item"><div className="info-label">应付金额合计</div><div className="info-value" style={{ fontWeight: 600 }}>{fmtAmount(contract.total_receivable)}</div></div>
+            <div className="info-item"><div className="info-label">实际到账合计</div><div className="info-value" style={{ fontWeight: 600, color: '#52c41a' }}>{fmtAmount(contract.total_received)}</div></div>
+            <div className="info-item"><div className="info-label">开票金额合计</div><div className="info-value" style={{ fontWeight: 600 }}>{fmtAmount(contract.total_invoiced)}</div></div>
+            <div className="info-item"><div className="info-label">未到账金额</div><div className="info-value" style={{ fontWeight: 600, color: Number(contract.total_receivable) - Number(contract.total_received) > 0 ? '#ff4d4f' : '#999' }}>
+              {fmtAmount((Number(contract.total_receivable) || 0) - (Number(contract.total_received) || 0))}
+            </div></div>
+          </div>
+
+          {/* 节点明细 */}
+          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>
+            节点明细 {milestones.length > 0 && `(${milestones.length} 个节点)`}
+          </h4>
+          {milestones.length === 0 ? (
+            <p style={{ color: '#999', fontSize: 13 }}>暂无节点数据</p>
+          ) : (
+            <table className="milestone-table">
+              <thead>
+                <tr>
+                  <th>节点</th>
+                  <th>节点日期</th>
+                  <th style={{ textAlign: 'right' }}>应付金额(万元)</th>
+                  <th style={{ textAlign: 'right' }}>实际到账(万元)</th>
+                  <th style={{ textAlign: 'right' }}>开票金额(万元)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {milestones.map((m, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 500 }}>{m.milestone_name || '-'}</td>
+                    <td>{fmtDate(m.milestone_date)}</td>
+                    <td style={{ textAlign: 'right' }}>{(Number(m.payable_amount) || 0).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', color: Number(m.received_amount) > 0 ? '#52c41a' : '#999' }}>{(Number(m.received_amount) || 0).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>{(Number(m.invoiced_amount) || 0).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* 备注 */}
+          {contract.notes && (
+            <>
+              <h4 style={{ margin: '16px 0 8px', color: '#1677ff', fontSize: 15 }}>备注</h4>
+              <p style={{ fontSize: 13, color: '#666', background: '#fafafa', padding: '10px 14px', borderRadius: 6 }}>{contract.notes}</p>
+            </>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>关闭</button>
         </div>
       </div>
     </div>
@@ -429,15 +507,9 @@ function ConfirmDialog({ title, message, onConfirm, onCancel, loading }) {
 // ============ Contract Form ============
 function ContractForm({ contract, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState({
-    contract_name: '',
-    contract_no: '',
-    party_a: '',
-    party_b: '',
-    amount: '',
-    sign_date: '',
-    end_date: '',
-    status: '进行中',
-    notes: ''
+    contract_name: '', contract_no: '', party_a: '', party_b: '',
+    amount: '', sign_date: '', end_date: '', status: '进行中',
+    notes: '', total_receivable: '', total_received: '', total_invoiced: ''
   });
 
   useEffect(() => {
@@ -451,50 +523,53 @@ function ContractForm({ contract, onSubmit, onCancel, loading }) {
         sign_date: contract.sign_date || '',
         end_date: contract.end_date || '',
         status: contract.status || '进行中',
-        notes: contract.notes || ''
+        notes: contract.notes || '',
+        total_receivable: contract.total_receivable?.toString() || '',
+        total_received: contract.total_received?.toString() || '',
+        total_invoiced: contract.total_invoiced?.toString() || ''
       });
     }
   }, [contract]);
 
-  const handleChange = (field) => (e) => {
-    const val = e.target.value;
-    setForm(prev => ({ ...prev, [field]: val }));
-  };
-
+  const handleChange = (f) => (e) => setForm(p => ({ ...p, [f]: e.target.value }));
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.contract_name.trim()) { alert('请输入合同名称'); return; }
-    if (!form.contract_no.trim()) { alert('请输入合同编号'); return; }
+    if (!form.contract_no.trim()) { alert('请输入合同序号'); return; }
     if (!form.amount || isNaN(Number(form.amount))) { alert('请输入有效金额'); return; }
     onSubmit({
       ...form,
-      amount: Number(form.amount)
+      amount: Number(form.amount),
+      total_receivable: Number(form.total_receivable) || 0,
+      total_received: Number(form.total_received) || 0,
+      total_invoiced: Number(form.total_invoiced) || 0
     });
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="modal-body">
+        <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 14 }}>基本信息</h4>
         <div className="form-grid">
           <div className="form-group">
             <label>合同名称 *</label>
-            <input value={form.contract_name} onChange={handleChange('contract_name')} placeholder="请输入合同名称" />
+            <input value={form.contract_name} onChange={handleChange('contract_name')} placeholder="请输入" />
           </div>
           <div className="form-group">
             <label>合同序号 *</label>
-            <input value={form.contract_no} onChange={handleChange('contract_no')} placeholder="请输入合同编号" />
+            <input value={form.contract_no} onChange={handleChange('contract_no')} placeholder="请输入" />
           </div>
           <div className="form-group">
             <label>甲方</label>
             <input value={form.party_a} onChange={handleChange('party_a')} placeholder="甲方名称" />
           </div>
           <div className="form-group">
-            <label>乙方</label>
-            <input value={form.party_b} onChange={handleChange('party_b')} placeholder="乙方名称" />
+            <label>对方单位</label>
+            <input value={form.party_b} onChange={handleChange('party_b')} placeholder="对方单位" />
           </div>
           <div className="form-group">
             <label>合同金额 (万元) *</label>
-            <input value={form.amount} onChange={handleChange('amount')} placeholder="0.00" type="number" step="0.01" min="0" />
+            <input value={form.amount} onChange={handleChange('amount')} type="number" step="0.01" min="0" placeholder="0.00" />
           </div>
           <div className="form-group">
             <label>状态</label>
@@ -510,10 +585,27 @@ function ContractForm({ contract, onSubmit, onCancel, loading }) {
             <label>结束日期</label>
             <input value={form.end_date} onChange={handleChange('end_date')} type="date" />
           </div>
-          <div className="form-group full">
-            <label>备注</label>
-            <textarea value={form.notes} onChange={handleChange('notes')} rows={3} placeholder="备注信息（可选）" />
+        </div>
+
+        <h4 style={{ margin: '16px 0 12px', color: '#1677ff', fontSize: 14 }}>财务信息</h4>
+        <div className="form-grid">
+          <div className="form-group">
+            <label>应付金额合计 (万元)</label>
+            <input value={form.total_receivable} onChange={handleChange('total_receivable')} type="number" step="0.01" min="0" placeholder="0.00" />
           </div>
+          <div className="form-group">
+            <label>实际到账合计 (万元)</label>
+            <input value={form.total_received} onChange={handleChange('total_received')} type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+          <div className="form-group">
+            <label>开票金额合计 (万元)</label>
+            <input value={form.total_invoiced} onChange={handleChange('total_invoiced')} type="number" step="0.01" min="0" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div className="form-group full" style={{ marginTop: 14 }}>
+          <label>备注</label>
+          <textarea value={form.notes} onChange={handleChange('notes')} rows={3} placeholder="备注信息（可选）" />
         </div>
       </div>
       <div className="modal-footer">
@@ -536,11 +628,12 @@ function App() {
   const [sortField, setSortField] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(15);
+  const pageSize = 15;
   const [showModal, setShowModal] = useState(false);
   const [editingContract, setEditingContract] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [detailTarget, setDetailTarget] = useState(null);
   const [realtimeStatus, setRealtimeStatus] = useState('connected');
   const [importTargets, setImportTargets] = useState(null);
   const [importing, setImporting] = useState(false);
@@ -549,169 +642,96 @@ function App() {
   const channelRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // ---- Fetch contracts ----
+  // ---- Fetch ----
   const fetchContracts = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('contracts')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('contracts').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setContracts(data || []);
     } catch (err) {
-      console.error('Failed to fetch contracts:', err);
-      addToast('加载合同数据失败: ' + err.message, 'error');
-    } finally {
-      setLoading(false);
-    }
+      addToast('加载合同失败: ' + err.message, 'error');
+    } finally { setLoading(false); }
   }, [addToast]);
 
-  // ---- Setup Realtime subscription ----
+  // ---- Realtime ----
   useEffect(() => {
     fetchContracts();
-
-    const channel = supabase
-      .channel('contracts-changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'contracts' },
-        (payload) => {
-          setContracts(prev => {
-            if (payload.eventType === 'INSERT') {
-              const exists = prev.find(c => c.id === payload.new.id);
-              if (exists) return prev;
-              return [payload.new, ...prev];
-            }
-            if (payload.eventType === 'UPDATE') {
-              return prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c);
-            }
-            if (payload.eventType === 'DELETE') {
-              return prev.filter(c => c.id !== payload.old.id);
-            }
-            return prev;
-          });
-          addToast(
-            payload.eventType === 'INSERT' ? `新合同已添加: ${payload.new.contract_name}` :
-            payload.eventType === 'UPDATE' ? `合同已更新: ${payload.new.contract_name}` :
-            '合同已删除',
-            'info'
-          );
-        }
-      )
-      .subscribe((status) => {
-        console.log('Realtime status:', status);
-        setRealtimeStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected');
-      });
-
+    const channel = supabase.channel('contracts-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, (payload) => {
+        setContracts(prev => {
+          if (payload.eventType === 'INSERT') return prev.find(c => c.id === payload.new.id) ? prev : [payload.new, ...prev];
+          if (payload.eventType === 'UPDATE') return prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c);
+          if (payload.eventType === 'DELETE') return prev.filter(c => c.id !== payload.old.id);
+          return prev;
+        });
+        addToast(
+          payload.eventType === 'INSERT' ? `新合同已添加: ${payload.new.contract_name}` :
+          payload.eventType === 'UPDATE' ? `合同已更新: ${payload.new.contract_name}` : '合同已删除', 'info');
+      })
+      .subscribe((status) => setRealtimeStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected'));
     channelRef.current = channel;
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(channel);
   }, [fetchContracts, addToast]);
 
-  // ---- Filter & Sort ----
+  // ---- Filter, Sort ----
   const filteredContracts = useMemo(() => {
-    let result = [...contracts];
-
+    let r = [...contracts];
     if (search.trim()) {
       const kw = search.trim().toLowerCase();
-      result = result.filter(c =>
-        (c.contract_name && c.contract_name.toLowerCase().includes(kw)) ||
-        (c.contract_no && c.contract_no.toLowerCase().includes(kw)) ||
-        (c.party_a && c.party_a.toLowerCase().includes(kw)) ||
-        (c.party_b && c.party_b.toLowerCase().includes(kw)) ||
-        (c.notes && c.notes.toLowerCase().includes(kw))
-      );
+      r = r.filter(c =>
+        (c.contract_name || '').toLowerCase().includes(kw) ||
+        (c.contract_no || '').toLowerCase().includes(kw) ||
+        (c.party_b || '').toLowerCase().includes(kw) ||
+        (c.party_a || '').toLowerCase().includes(kw) ||
+        (c.notes || '').toLowerCase().includes(kw));
     }
-
-    if (statusFilter) {
-      result = result.filter(c => c.status === statusFilter);
-    }
-
-    result.sort((a, b) => {
-      let va = a[sortField];
-      let vb = b[sortField];
-      if (sortField === 'amount') {
-        va = Number(va) || 0;
-        vb = Number(vb) || 0;
-      } else {
-        va = va || '';
-        vb = vb || '';
-      }
-      if (va < vb) return sortOrder === 'asc' ? -1 : 1;
-      if (va > vb) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
+    if (statusFilter) r = r.filter(c => c.status === statusFilter);
+    r.sort((a, b) => {
+      let va = a[sortField], vb = b[sortField];
+      if (sortField === 'amount' || sortField === 'total_receivable' || sortField === 'total_received' || sortField === 'total_invoiced') {
+        va = Number(va) || 0; vb = Number(vb) || 0;
+      } else { va = va || ''; vb = vb || ''; }
+      return va < vb ? (sortOrder === 'asc' ? -1 : 1) : va > vb ? (sortOrder === 'asc' ? 1 : -1) : 0;
     });
-
-    return result;
+    return r;
   }, [contracts, search, statusFilter, sortField, sortOrder]);
 
   const totalPages = Math.max(1, Math.ceil(filteredContracts.length / pageSize));
   const pagedContracts = filteredContracts.slice((page - 1) * pageSize, page * pageSize);
-
-  // Reset page when filters change
   useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   // ---- Stats ----
   const stats = useMemo(() => {
     const total = contracts.length;
-    const totalAmount = contracts.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    const totalAmount = contracts.reduce((s, c) => s + (Number(c.amount) || 0), 0);
     const activeCount = contracts.filter(c => c.status === '进行中').length;
-    const activeAmount = contracts.filter(c => c.status === '进行中').reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-    return { total, totalAmount, activeCount, activeAmount };
+    const activeAmount = contracts.filter(c => c.status === '进行中').reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const totalReceivable = contracts.reduce((s, c) => s + (Number(c.total_receivable) || 0), 0);
+    const totalReceived = contracts.reduce((s, c) => s + (Number(c.total_received) || 0), 0);
+    return { total, totalAmount, activeCount, activeAmount, totalReceivable, totalReceived };
   }, [contracts]);
 
-  // ---- Sort handler ----
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
+  // ---- Sort ----
+  const handleSort = (f) => { if (sortField === f) setSortOrder(p => p === 'asc' ? 'desc' : 'asc'); else { setSortField(f); setSortOrder('asc'); } };
+  const sortIcon = (f) => sortField !== f ? ' ↕' : (sortOrder === 'asc' ? ' ↑' : ' ↓');
 
-  const sortIcon = (field) => {
-    if (sortField !== field) return ' ↕';
-    return sortOrder === 'asc' ? ' ↑' : ' ↓';
-  };
-
-  // ---- Open Add / Edit modal ----
-  const openAdd = () => {
-    setEditingContract(null);
-    setShowModal(true);
-  };
-
-  const openEdit = (contract) => {
-    setEditingContract(contract);
-    setShowModal(true);
-  };
-
-  // ---- Submit form ----
-  const handleSubmit = async (formData) => {
+  // ---- Submit ----
+  const handleSubmit = async (fd) => {
     setSaving(true);
     try {
       if (editingContract) {
-        const { error } = await supabase
-          .from('contracts')
-          .update({ ...formData, updated_at: new Date().toISOString() })
-          .eq('id', editingContract.id);
+        const { error } = await supabase.from('contracts').update({ ...fd, updated_at: new Date().toISOString() }).eq('id', editingContract.id);
         if (error) throw error;
         addToast('合同更新成功', 'success');
       } else {
-        const { error } = await supabase
-          .from('contracts')
-          .insert([{ ...formData }]);
+        const { error } = await supabase.from('contracts').insert([fd]);
         if (error) throw error;
         addToast('合同添加成功', 'success');
       }
       setShowModal(false);
       setEditingContract(null);
-    } catch (err) {
-      console.error('Save error:', err);
-      addToast('保存失败: ' + err.message, 'error');
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { addToast('保存失败: ' + err.message, 'error'); }
+    finally { setSaving(false); }
   };
 
   // ---- Delete ----
@@ -719,164 +739,152 @@ function App() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('contracts')
-        .delete()
-        .eq('id', deleteTarget.id);
+      const { error } = await supabase.from('contracts').delete().eq('id', deleteTarget.id);
       if (error) throw error;
       addToast(`合同"${deleteTarget.contract_name}"已删除`, 'success');
       setDeleteTarget(null);
-    } catch (err) {
-      addToast('删除失败: ' + err.message, 'error');
-    } finally {
-      setDeleting(false);
-    }
+    } catch (err) { addToast('删除失败: ' + err.message, 'error'); }
+    finally { setDeleting(false); }
   };
 
-  // ---- Export CSV ----
+  // ---- Export ----
   const exportCSV = () => {
-    const headers = ['合同名称', '合同编号', '对方单位', '金额(万元)', '签订日期', '结束日期', '状态', '备注'];
-    const rows = filteredContracts.map(c => [
-      c.contract_name,
-      c.contract_no,
-      c.party_b,
-      c.amount,
-      c.sign_date,
-      c.end_date,
-      c.status,
-      c.notes
-    ]);
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `合同数据_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const headers = ['合同序号', '合同名称', '对方单位', '合同总额(万元)', '状态', '签订日期', '结束日期',
+      '应付金额合计(万元)', '实际到账合计(万元)', '开票金额合计(万元)', '节点明细', '备注'];
+    const rows = filteredContracts.map(c => {
+      const milestones = c.milestones || [];
+      const detailStr = milestones.map(m =>
+        `${m.milestone_name||''}(${fmtDate(m.milestone_date)}):应付${Number(m.payable_amount||0).toFixed(2)}到账${Number(m.received_amount||0).toFixed(2)}开票${Number(m.invoiced_amount||0).toFixed(2)}`
+      ).join('; ');
+      return [c.contract_no, c.contract_name, c.party_b, c.amount, c.status, c.sign_date, c.end_date,
+        c.total_receivable || 0, c.total_received || 0, c.total_invoiced || 0, detailStr, c.notes || ''];
+    });
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${(cell||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `合同数据_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(blob);
     addToast('CSV导出成功', 'success');
   };
 
-  // ---- Format helpers ----
-  const fmtAmount = (v) => {
-    const n = Number(v) || 0;
-    return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 万元';
-  };
-  const fmtDate = (d) => d ? d.slice(0, 10) : '-';
-
-  // ---- CSV Parse helpers ----
+  // ============ CSV Parse ============
   const parseCSVLine = (line) => {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
+    const r = []; let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      if (ch === '"') {
-        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-        else { inQuotes = !inQuotes; }
-      } else if (ch === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += ch;
-      }
+      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === ',' && !inQ) { r.push(cur); cur = ''; }
+      else cur += ch;
     }
-    result.push(current);
-    return result;
+    r.push(cur); return r;
   };
-
   const convDate = (s) => {
     if (!s) return '';
-    const parts = s.split('/');
-    if (parts.length === 3) {
-      return `${parts[0].padStart(4,'0')}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
-    }
-    return s;
+    const p = s.split('/');
+    return p.length === 3 ? `${p[0].padStart(4,'0')}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}` : s;
   };
 
-  // ---- Handle file selection for import ----
+  // ---- Import ----
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.split('\n').filter(l => l.trim());
-      if (lines.length < 2) {
-        addToast('CSV文件为空或格式不正确', 'error');
-        return;
-      }
-      // Group by contract index (col 0)
-      const contractMap = {};
+      const lines = evt.target.result.split('\n').filter(l => l.trim());
+      if (lines.length < 2) { addToast('CSV为空或格式错误', 'error'); return; }
+
+      // Group by contract index, collecting ALL milestones
+      const idxMap = {};  // idx -> { first row info, milestones[] }
       for (let i = 1; i < lines.length; i++) {
         const row = parseCSVLine(lines[i]);
-        if (row.length < 5) continue;
+        if (row.length < 13) continue;
         const idx = row[0].trim();
         if (!idx) continue;
-        if (!contractMap[idx]) {
+
+        if (!idxMap[idx]) {
           const rawStatus = (row[4] || '').trim();
-          contractMap[idx] = {
+          idxMap[idx] = {
             contract_no: idx,
             contract_name: (row[1] || '').trim(),
             party_b: (row[2] || '').trim(),
             amount: parseFloat(row[3]) || 0,
-            status: rawStatus === '已完成' ? '已结束' : '进行中',
+            status: rawStatus === '已完成' ? '已结束' : (rawStatus || '进行中'),
             sign_date: convDate((row[5] || '').trim()),
             end_date: convDate((row[6] || '').trim()),
-            notes: (row[12] || '').trim()
+            notes: (row[12] || '').trim(),
+            milestones: [],
+            total_receivable: 0,
+            total_received: 0,
+            total_invoiced: 0
           };
         }
+
+        // Collect milestone
+        const mName = (row[7] || '').trim();
+        const mDate = convDate((row[8] || '').trim());
+        const payable = parseFloat(row[9]) || 0;
+        const received = parseFloat(row[10]) || 0;
+        const invoiced = parseFloat(row[11]) || 0;
+
+        if (mName || mDate || payable) {
+          idxMap[idx].milestones.push({
+            milestone_name: mName,
+            milestone_date: mDate,
+            payable_amount: payable,
+            received_amount: received,
+            invoiced_amount: invoiced
+          });
+        }
+        idxMap[idx].total_receivable += payable;
+        idxMap[idx].total_received += received;
+        idxMap[idx].total_invoiced += invoiced;
       }
-      const list = Object.values(contractMap);
-      if (list.length === 0) {
-        addToast('未解析到有效合同数据', 'error');
-        return;
-      }
+
+      const list = Object.values(idxMap);
+      if (list.length === 0) { addToast('未解析到有效合同', 'error'); return; }
       setImportTargets(list);
     };
     reader.readAsText(file, 'UTF-8');
     e.target.value = '';
   };
 
-  // ---- Execute import ----
+  // ---- Execute Import ----
   const handleImportConfirm = async () => {
     if (!importTargets || importTargets.length === 0) return;
-    setImporting(true);
-    setImportProgress(0);
+    setImporting(true); setImportProgress(0);
     let success = 0, fail = 0;
     for (let i = 0; i < importTargets.length; i++) {
       const c = importTargets[i];
+      const record = {
+        contract_no: c.contract_no,
+        contract_name: c.contract_name,
+        party_b: c.party_b,
+        amount: c.amount,
+        status: c.status,
+        sign_date: c.sign_date,
+        end_date: c.end_date,
+        notes: c.notes,
+        milestones: c.milestones,
+        total_receivable: c.total_receivable,
+        total_received: c.total_received,
+        total_invoiced: c.total_invoiced
+      };
       try {
-        const { error } = await supabase.from('contracts').insert([c]);
-        if (error) {
-          if (error.code === '23505') { fail++; }
-          else { fail++; }
-        } else { success++; }
+        const { error } = await supabase.from('contracts').insert([record]);
+        if (error) { fail++; } else { success++; }
       } catch { fail++; }
       setImportProgress(i + 1);
     }
-    setImportTargets(null);
-    setImporting(false);
+    setImportTargets(null); setImporting(false);
     addToast(`导入完成：成功 ${success} 条${fail > 0 ? `，跳过/失败 ${fail} 条` : ''}`, fail > 0 && success === 0 ? 'error' : 'success');
   };
-  if (loading) {
-    return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
+
+  if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
 
   return (
     <>
-      {/* Toasts */}
       <div className="toast-container">
-        {toasts.map(t => (
-          <Toast key={t.id} message={t.message} type={t.type} onClose={() => removeToast(t.id)} />
-        ))}
+        {toasts.map(t => <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />)}
       </div>
 
       {/* Header */}
@@ -885,11 +893,9 @@ function App() {
           <h1>合同管理系统</h1>
           <span>多人在线实时协作 · Supabase 驱动</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className={`realtime-badge ${realtimeStatus}`}>
-            <span className="realtime-dot"></span>
-            {realtimeStatus === 'connected' ? '实时连接' : '连接断开'}
-          </div>
+        <div className={`realtime-badge ${realtimeStatus}`}>
+          <span className="realtime-dot"></span>
+          {realtimeStatus === 'connected' ? '实时连接' : '连接断开'}
         </div>
       </div>
 
@@ -912,25 +918,22 @@ function App() {
             <div className="sub">份进行中</div>
           </div>
           <div className="stat-card">
-            <div className="label">进行中金额</div>
-            <div className="value" style={{ color: '#1677ff' }}>{fmtAmount(stats.activeAmount)}</div>
-            <div className="sub">进行中合同金额（万元）</div>
+            <div className="label">应付合计 / 到账合计</div>
+            <div className="value" style={{ color: '#1677ff', fontSize: 20 }}>
+              {fmtAmount(stats.totalReceivable)} / {fmtAmount(stats.totalReceived)}
+            </div>
+            <div className="sub">到账 {(stats.totalReceivable > 0 ? (stats.totalReceived / stats.totalReceivable * 100).toFixed(1) : 0)}%</div>
           </div>
         </div>
 
         {/* Toolbar */}
         <div className="toolbar">
-          <input
-            className="search-box"
-            placeholder="搜索合同名称、编号、对方单位..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <input className="search-box" placeholder="搜索合同名称、编号、对方单位..." value={search} onChange={e => setSearch(e.target.value)} />
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="">全部状态</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button className="btn btn-primary" onClick={openAdd}>+ 添加合同</button>
+          <button className="btn btn-primary" onClick={() => { setEditingContract(null); setShowModal(true); }}>+ 添加合同</button>
           <button className="btn btn-success" onClick={() => fileInputRef.current?.click()}>导入CSV</button>
           <button className="btn btn-outline" onClick={exportCSV}>导出CSV</button>
           <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileSelect} />
@@ -941,7 +944,7 @@ function App() {
           <div className="table-wrapper">
             <div className="empty-state">
               <div className="icon">📋</div>
-              <p>{search || statusFilter ? '没有匹配的合同，请调整筛选条件' : '还没有合同数据，点击"添加合同"开始'}</p>
+              <p>{search || statusFilter ? '没有匹配的合同' : '还没有合同数据，点击"添加合同"开始'}</p>
             </div>
           </div>
         ) : (
@@ -949,31 +952,38 @@ function App() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ width: 40 }}>#</th>
+                  <th style={{ width: 36 }}>#</th>
                   <th onClick={() => handleSort('contract_name')}>合同名称{sortIcon('contract_name')}</th>
-                  <th onClick={() => handleSort('contract_no')}>合同编号{sortIcon('contract_no')}</th>
-                  <th onClick={() => handleSort('party_a')}>甲方{sortIcon('party_a')}</th>
-                  <th onClick={() => handleSort('party_b')}>对方单位{sortIcon('party_b')}</th>
-                  <th onClick={() => handleSort('amount')} style={{ textAlign: 'right' }}>金额(万元){sortIcon('amount')}</th>
-                  <th onClick={() => handleSort('sign_date')}>签订日期{sortIcon('sign_date')}</th>
-                  <th onClick={() => handleSort('status')}>状态{sortIcon('status')}</th>
-                  <th style={{ width: 100 }}>操作</th>
+                  <th onClick={() => handleSort('contract_no')} style={{ width: 60 }}>序号{sortIcon('contract_no')}</th>
+                  <th onClick={() => handleSort('party_b')} style={{ width: 130 }}>对方单位{sortIcon('party_b')}</th>
+                  <th onClick={() => handleSort('amount')} style={{ width: 100, textAlign: 'right' }}>金额(万元){sortIcon('amount')}</th>
+                  <th onClick={() => handleSort('total_receivable')} style={{ width: 90, textAlign: 'right' }}>应付{sortIcon('total_receivable')}</th>
+                  <th onClick={() => handleSort('total_received')} style={{ width: 90, textAlign: 'right' }}>到账{sortIcon('total_received')}</th>
+                  <th onClick={() => handleSort('total_invoiced')} style={{ width: 90, textAlign: 'right' }}>开票{sortIcon('total_invoiced')}</th>
+                  <th onClick={() => handleSort('sign_date')} style={{ width: 85 }}>签订日期{sortIcon('sign_date')}</th>
+                  <th onClick={() => handleSort('status')} style={{ width: 70 }}>状态{sortIcon('status')}</th>
+                  <th style={{ width: 130 }}>操作</th>
                 </tr>
               </thead>
               <tbody>
                 {pagedContracts.map((c, idx) => (
                   <tr key={c.id}>
-                    <td style={{ color: '#999', fontSize: 13 }}>{(page - 1) * pageSize + idx + 1}</td>
-                    <td style={{ fontWeight: 500 }}>{c.contract_name}</td>
-                    <td style={{ fontFamily: 'Courier New, monospace', fontSize: 13 }}>{c.contract_no}</td>
-                    <td>{c.party_a || '-'}</td>
-                    <td>{c.party_b || '-'}</td>
-                    <td className="amount-cell">{fmtAmount(c.amount)}</td>
-                    <td style={{ fontSize: 13 }}>{fmtDate(c.sign_date)}</td>
-                    <td><span className={`status-tag ${STATUS_COLORS[c.status] || 'status-active'}`}>{c.status}</span></td>
+                    <td style={{ color: '#999', fontSize: 12 }}>{(page - 1) * pageSize + idx + 1}</td>
+                    <td style={{ fontWeight: 500, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.contract_name}>{c.contract_name}</td>
+                    <td style={{ fontSize: 12 }}>{c.contract_no}</td>
+                    <td style={{ fontSize: 12 }}>{c.party_b || '-'}</td>
+                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.amount) || 0).toFixed(2)}</td>
+                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.total_receivable) || 0).toFixed(2)}</td>
+                    <td className="amount-cell" style={{ fontSize: 12, color: Number(c.total_received) > 0 ? '#52c41a' : '#999' }}>
+                      {(Number(c.total_received) || 0).toFixed(2)}
+                    </td>
+                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.total_invoiced) || 0).toFixed(2)}</td>
+                    <td style={{ fontSize: 12 }}>{fmtDate(c.sign_date)}</td>
+                    <td><span className={`status-tag ${STATUS_COLORS[c.status] || 'status-active'}`} style={{ fontSize: 11 }}>{c.status}</span></td>
                     <td>
                       <div className="action-btns">
-                        <button className="btn btn-sm btn-outline" onClick={() => openEdit(c)}>编辑</button>
+                        <button className="btn btn-sm btn-outline" onClick={() => setDetailTarget(c)}>详情</button>
+                        <button className="btn btn-sm btn-outline" onClick={() => { setEditingContract(c); setShowModal(true); }}>编辑</button>
                         <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(c)}>删除</button>
                       </div>
                     </td>
@@ -985,25 +995,8 @@ function App() {
               <span>共 {filteredContracts.length} 条</span>
               <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</button>
               {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 7) {
-                  pageNum = i + 1;
-                } else if (page <= 4) {
-                  pageNum = i + 1;
-                } else if (page >= totalPages - 3) {
-                  pageNum = totalPages - 6 + i;
-                } else {
-                  pageNum = page - 3 + i;
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    className={page === pageNum ? 'active-page' : ''}
-                    onClick={() => setPage(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                );
+                let pn = totalPages <= 7 ? i + 1 : (page <= 4 ? i + 1 : (page >= totalPages - 3 ? totalPages - 6 + i : page - 3 + i));
+                return <button key={pn} className={page === pn ? 'active-page' : ''} onClick={() => setPage(pn)}>{pn}</button>;
               })}
               <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>下一页</button>
             </div>
@@ -1011,20 +1004,18 @@ function App() {
         )}
       </div>
 
+      {/* Detail Modal */}
+      {detailTarget && <ContractDetail contract={detailTarget} onClose={() => setDetailTarget(null)} />}
+
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingContract ? '编辑合同' : '添加合同'}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+              <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
             </div>
-            <ContractForm
-              contract={editingContract}
-              onSubmit={handleSubmit}
-              onCancel={() => { setShowModal(false); setEditingContract(null); }}
-              loading={saving}
-            />
+            <ContractForm contract={editingContract} onSubmit={handleSubmit} onCancel={() => { setShowModal(false); setEditingContract(null); }} loading={saving} />
           </div>
         </div>
       )}
@@ -1032,45 +1023,49 @@ function App() {
       {/* Delete Confirmation */}
       {deleteTarget && (
         <ConfirmDialog
-          title="确认删除"
-          message={`确定要删除合同"${deleteTarget.contract_name}"（编号: ${deleteTarget.contract_no}）吗？此操作不可恢复。`}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-          loading={deleting}
-        />
+          title="确认删除" loading={deleting}
+          message={`确定删除"${deleteTarget.contract_name}"（序号: ${deleteTarget.contract_no}）？不可恢复。`}
+          onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
       )}
 
-      {/* Import Preview Dialog */}
+      {/* Import Preview */}
       {importTargets && (
         <div className="modal-overlay" onClick={() => { if (!importing) setImportTargets(null); }}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+          <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>导入合同预览</h2>
-              <button className="modal-close" onClick={() => { if (!importing) setImportTargets(null); }}>×</button>
+              <h2>导入预览</h2>
+              <button className="modal-close" onClick={() => { if (!importing) setImportTargets(null); }}>&times;</button>
             </div>
-            <div className="modal-body" style={{ maxHeight: '50vh', overflowY: 'auto', padding: '12px 20px' }}>
-              <p style={{ marginBottom: 12, fontSize: 14, color: '#666' }}>
-                将从CSV中导入 <strong>{importTargets.length}</strong> 份合同（按合同序号去重）。
-                已存在的合同编号会自动跳过。
+            <div className="modal-body" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '12px 20px' }}>
+              <p style={{ marginBottom: 12, fontSize: 13, color: '#666' }}>
+                将从CSV导入 <strong>{importTargets.length}</strong> 份合同（已按合同序号去重，每个合同的节点已合并）
               </p>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
                   <tr style={{ background: '#fafafa' }}>
-                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>序号</th>
-                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>合同名称</th>
-                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>对方单位</th>
-                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>金额(万元)</th>
-                    <th style={{ padding: '6px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>状态</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>序号</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>合同名称</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>对方单位</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>金额(万)</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>应付(万)</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>到账(万)</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>开票(万)</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>节点数</th>
+                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>状态</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {importTargets.map((c, idx) => (
+                  {importTargets.map(c => (
                     <tr key={c.contract_no}>
-                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.contract_no}</td>
-                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.contract_name}</td>
-                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.party_b}</td>
-                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.amount.toFixed(2)}</td>
-                      <td style={{ padding: '5px 8px', borderBottom: '1px solid #f0f0f0' }}><span className={`status-tag ${STATUS_COLORS[c.status]}`}>{c.status}</span></td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.contract_no}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.contract_name}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.party_b}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.amount.toFixed(2)}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_receivable.toFixed(2)}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_received.toFixed(2)}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_invoiced.toFixed(2)}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>{c.milestones.length}</td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}><span className={`status-tag ${STATUS_COLORS[c.status]}`} style={{ fontSize: 11 }}>{c.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
