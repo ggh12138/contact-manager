@@ -4,1148 +4,1071 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>合同管理系统</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.0/antd.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/5.12.0/reset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-:root {
-  --primary: #1677ff;
-  --success: #52c41a;
-  --warning: #faad14;
-  --danger: #ff4d4f;
-  --bg: #f5f5f5;
-  --card-bg: #fff;
-  --text: #1f1f1f;
-  --text-secondary: #666;
-  --border: #e8e8e8;
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:#f0f2f5; color:#333; min-height:100vh; }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:220px; background:#1a2332; color:#fff; z-index:100; display:flex; flex-direction:column; }
+.sidebar-logo { padding:24px 20px; font-size:18px; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; }
+.sidebar-logo .icon { width:36px; height:36px; background:linear-gradient(135deg,#4e7cff,#36cfc9); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.sidebar-nav { flex:1; padding:12px 0; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; color:rgba(255,255,255,0.65); transition:0.2s; font-size:14px; border-left:3px solid transparent; }
+.nav-item:hover { background:rgba(255,255,255,0.05); color:#fff; }
+.nav-item.active { background:rgba(78,124,255,0.15); color:#4e7cff; border-left-color:#4e7cff; }
+.nav-item .badge { margin-left:auto; background:#e74c3c; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; display:none; }
+.nav-item .badge.show { display:inline; }
+.main { margin-left:220px; min-height:100vh; }
+.header { background:#fff; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e8e8e8; position:sticky; top:0; z-index:50; }
+.header h1 { font-size:20px; font-weight:600; }
+.header-right { display:flex; align-items:center; gap:16px; font-size:13px; color:#888; }
+.realtime-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+.realtime-dot.online { background:#52c41a; }
+.realtime-dot.offline { background:#ff4d4f; }
+.content { padding:24px 28px; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:#fff; border-radius:10px; padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.06); display:flex; align-items:center; gap:16px; transition:0.2s; }
+.stat-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.1); transform:translateY(-2px); }
+.stat-icon { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.stat-icon.blue { background:#e6f0ff; color:#4e7cff; }
+.stat-icon.green { background:#e6fff0; color:#36cf67; }
+.stat-icon.orange { background:#fff7e6; color:#fa8c16; }
+.stat-icon.red { background:#ffeaea; color:#e74c3c; }
+.stat-info { flex:1; }
+.stat-label { font-size:13px; color:#888; margin-bottom:4px; }
+.stat-value { font-size:24px; font-weight:700; }
+.stat-sub { font-size:12px; color:#aaa; margin-top:2px; }
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.chart-box { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.chart-box h3 { font-size:15px; font-weight:600; margin-bottom:12px; color:#444; }
+.chart-wrap { position:relative; width:100%; height:250px; }
+.table-box { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; }
+.toolbar-right { display:flex; align-items:center; gap:8px; }
+.search-input { padding:8px 14px; border:1px solid #ddd; border-radius:6px; font-size:13px; width:220px; outline:none; transition:0.2s; }
+.search-input:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.filter-btn { padding:7px 16px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; transition:0.2s; color:#555; white-space:nowrap; }
+.filter-btn:hover { border-color:#4e7cff; color:#4e7cff; }
+.filter-btn.active { background:#4e7cff; color:#fff; border-color:#4e7cff; }
+.action-btn { padding:7px 14px; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-size:13px; transition:0.2s; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.action-btn.primary { background:#4e7cff; color:#fff; border-color:#4e7cff; }
+.action-btn.primary:hover { background:#3a6aff; }
+.action-btn.success { background:#13c2c2; color:#fff; border-color:#13c2c2; }
+.action-btn.success:hover { background:#0fadad; }
+.action-btn.danger { color:#e74c3c; border-color:#e74c3c; }
+.action-btn.danger:hover { background:#e74c3c; color:#fff; }
+.action-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.action-btn:hover:not(:disabled) { box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#f7f8fa; padding:12px 14px; text-align:left; font-weight:600; color:#555; border-bottom:2px solid #e8e8e8; white-space:nowrap; }
+td { padding:12px 14px; border-bottom:1px solid #f0f0f0; }
+tr:hover { background:#f9fafb; }
+tr.clickable { cursor:pointer; }
+.amount { font-weight:600; font-variant-numeric:tabular-nums; font-family:"SF Mono","Consolas","Menlo",monospace; text-align:right; }
+.status-tag { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; }
+.status-tag.active { background:#e6fff0; color:#13c2c2; }
+.status-tag.done { background:#f0f0f0; color:#888; }
+.detail-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); z-index:200; justify-content:center; align-items:center; }
+.detail-overlay.show { display:flex; }
+.detail-panel { background:#fff; border-radius:12px; width:960px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.detail-header { padding:18px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:10; border-radius:12px 12px 0 0; }
+.detail-header h2 { font-size:17px; font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.detail-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.close-btn { width:32px; height:32px; border-radius:50%; border:none; background:#f0f0f0; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+.close-btn:hover { background:#e0e0e0; }
+.detail-body { padding:24px; }
+.editable-field { display:flex; flex-direction:column; gap:4px; }
+.editable-field .label { font-size:12px; color:#999; }
+.editable-field input, .editable-field select { padding:6px 10px; border:1px solid #e0e0e0; border-radius:6px; font-size:14px; font-weight:500; outline:none; transition:0.2s; background:#fff; }
+.editable-field input:focus, .editable-field select:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.detail-info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.progress-section { margin-top:20px; }
+.progress-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.progress-header h4 { font-size:14px; color:#555; }
+.progress-bar-bg { height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden; margin-bottom:20px; }
+.progress-bar-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+.progress-bar-fill.blue { background:linear-gradient(90deg,#4e7cff,#36cfc9); }
+.node-table-wrap { overflow-x:auto; margin-top:16px; }
+.node-table { width:100%; font-size:13px; min-width:780px; }
+.node-table th { background:#fafafa; white-space:nowrap; }
+.node-table td { padding:8px 10px; vertical-align:middle; }
+.node-table input, .node-table select { padding:4px 8px; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; width:100%; outline:none; background:#fff; transition:0.2s; min-width:50px; }
+.node-table input:focus, .node-table select:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.node-table .overdue-auto { color:#e74c3c; font-weight:600; text-align:center; padding:4px 8px; background:#fafafa; border-radius:4px; display:inline-block; min-width:60px; font-size:13px; }
+.node-row-overdue { background:#fff2f0; }
+.node-add-btn { margin-top:8px; padding:6px 16px; border:1px dashed #ccc; border-radius:6px; background:#fafafa; cursor:pointer; font-size:13px; color:#888; transition:0.2s; }
+.node-add-btn:hover { border-color:#4e7cff; color:#4e7cff; background:#f0f5ff; }
+.alert-row { background:#fffbe6; }
+.page { display:none; }
+.page.active { display:block; }
+.toast { position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:999; padding:12px 24px; border-radius:8px; font-size:14px; color:#fff; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.toast.show { opacity:1; }
+.toast.success { background:#13c2c2; }
+.toast.error { background:#e74c3c; }
+.toast.info { background:#4e7cff; }
+.confirm-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:300; justify-content:center; align-items:center; }
+.confirm-overlay.show { display:flex; }
+.confirm-box { background:#fff; border-radius:10px; padding:28px; width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+.confirm-box h3 { font-size:16px; margin-bottom:8px; }
+.confirm-box p { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
+.confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
+.confirm-actions button { padding:8px 20px; border-radius:6px; border:1px solid #ddd; cursor:pointer; font-size:13px; }
+.confirm-actions .btn-cancel { background:#f5f5f5; }
+.confirm-actions .btn-danger { background:#e74c3c; color:#fff; border-color:#e74c3c; }
+.empty-state { text-align:center; padding:60px 20px; color:#bbb; }
+.empty-state .icon { font-size:48px; margin-bottom:12px; }
+.empty-state p { font-size:14px; }
+.file-input-hidden { display:none; }
+@media (max-width:1024px) {
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .charts-row { grid-template-columns:1fr; }
+  .sidebar { width:64px; }
+  .sidebar-logo span, .nav-item span:not(.badge) { display:none; }
+  .nav-item { justify-content:center; padding:12px; }
+  .main { margin-left:64px; }
+  .detail-panel { width:95%; }
+  .detail-info-grid { grid-template-columns:repeat(2,1fr); }
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-}
-.header {
-  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
-  color: #fff;
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header h1 { font-size: 20px; font-weight: 600; }
-.header span { font-size: 13px; opacity: 0.85; }
-.container { max-width: 1400px; margin: 0 auto; padding: 16px 20px; }
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.stat-card {
-  background: var(--card-bg);
-  border-radius: 8px;
-  padding: 16px 20px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  border: 1px solid var(--border);
-}
-.stat-card .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
-.stat-card .value { font-size: 24px; font-weight: 700; }
-.stat-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 16px;
-  background: var(--card-bg);
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.toolbar .search-box {
-  flex: 1;
-  min-width: 200px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.toolbar .search-box:focus { border-color: var(--primary); }
-.toolbar select {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  background: #fff;
-  min-width: 100px;
-}
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: #4096ff; }
-.btn-success { background: var(--success); color: #fff; }
-.btn-success:hover { opacity: 0.85; }
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-danger:hover { opacity: 0.85; }
-.btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
-.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-
-.table-wrapper {
-  background: var(--card-bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  overflow: auto;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-.table-wrapper table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1100px;
-}
-.table-wrapper th {
-  background: #fafafa;
-  padding: 10px 10px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-}
-.table-wrapper th:hover { background: #f0f0f0; }
-.table-wrapper td {
-  padding: 9px 10px;
-  font-size: 13px;
-  border-bottom: 1px solid #f0f0f0;
-}
-.table-wrapper tr:hover td { background: #fafafa; }
-.table-wrapper tr:last-child td { border-bottom: none; }
-.amount-cell { font-weight: 600; text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
-
-.status-tag {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-}
-.status-active { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
-.status-ended { background: #f5f5f5; color: #8c8c8c; border: 1px solid #d9d9d9; }
-.status-terminated { background: #fff2f0; color: #cf1322; border: 1px solid #ffa39e; }
-.status-pending { background: #fffbe6; color: #d46b08; border: 1px solid #ffe58f; }
-.action-btns { display: flex; gap: 4px; }
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.15s;
-}
-.modal {
-  background: var(--card-bg);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 720px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
-  animation: slideUp 0.2s;
-}
-.modal-wide { max-width: 900px; }
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  background: var(--card-bg);
-  z-index: 1;
-}
-.modal-header h2 { font-size: 17px; font-weight: 600; }
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 4px;
-  line-height: 1;
-}
-.modal-close:hover { color: var(--text); }
-.modal-body { padding: 20px; }
-.modal-footer {
-  padding: 12px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group.full { grid-column: 1 / -1; }
-.form-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-.form-group input, .form-group select, .form-group textarea {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
-}
-.form-group .readonly-input {
-  background: #f9f9f9;
-  color: #999;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.info-item {}
-.info-item .info-label { font-size: 12px; color: #999; margin-bottom: 2px; }
-.info-item .info-value { font-size: 14px; font-weight: 500; }
-
-.milestone-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-.milestone-table th {
-  background: #fafafa;
-  padding: 8px 10px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-.milestone-table td {
-  padding: 7px 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-.milestone-table tr:last-child td { border-bottom: none; }
-
-.pagination {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.pagination button {
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 13px;
-}
-.pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-.pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-.pagination .active-page { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-.realtime-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  padding: 4px 12px;
-  border-radius: 12px;
-}
-.realtime-badge.connected { background: rgba(255,255,255,0.2); color: #fff; }
-.realtime-badge.disconnected { background: #fff2f0; color: #cf1322; }
-.realtime-dot { width: 6px; height: 6px; border-radius: 50%; }
-.realtime-badge.connected .realtime-dot { background: #95de64; }
-.realtime-badge.disconnected .realtime-dot { background: #ff4d4f; }
-
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
-.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-.empty-state p { font-size: 14px; }
-
-.toast-container {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast {
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  animation: slideInRight 0.3s;
-  max-width: 360px;
-}
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-.toast.info { background: var(--primary); }
-
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-}
-.confirm-dialog {
-  background: var(--card-bg);
-  border-radius: 10px;
-  padding: 24px;
-  width: 380px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
-  text-align: center;
-}
-.confirm-dialog h3 { font-size: 16px; margin-bottom: 8px; }
-.confirm-dialog p { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
-.confirm-dialog .btns { display: flex; gap: 8px; justify-content: center; }
-
-.loading-spinner { display: flex; align-items: center; justify-content: center; padding: 60px; }
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-@media (max-width: 768px) {
-  .form-grid, .info-grid { grid-template-columns: 1fr; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .toolbar { flex-direction: column; }
-  .toolbar .search-box { width: 100%; }
-  .header h1 { font-size: 16px; }
-  .table-wrapper { overflow-x: auto; }
+@media (max-width:640px) {
+  .stats-grid { grid-template-columns:1fr; }
+  .detail-info-grid { grid-template-columns:1fr; }
 }
 </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback, useMemo } = React;
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">📋</div>
+    <span>合同管理</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard">
+      <span>📊</span><span>工作台</span>
+    </div>
+    <div class="nav-item" data-page="list">
+      <span>📑</span><span>合同列表</span>
+      <span class="badge" id="active-badge">0</span>
+    </div>
+    <div class="nav-item" data-page="overdue">
+      <span>⚠️</span><span>逾期预警</span>
+      <span class="badge" id="overdue-badge">0</span>
+    </div>
+  </nav>
+</aside>
 
-// ============ Supabase Client ============
+<div class="main">
+  <div class="header">
+    <h1 id="page-title">📊 工作台</h1>
+    <div class="header-right">
+      <span><span class="realtime-dot online" id="realtime-dot"></span><span id="realtime-label">实时连接</span></span>
+      <span>📅 <span id="today-display">--</span></span>
+      <span>共 <strong id="total-count">0</strong> 份合同</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-info">
+            <div class="stat-label">合同总数</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-sub">执行中 <span id="stat-active">0</span> 份</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <div class="stat-label">合同总金额</div>
+            <div class="stat-value" id="stat-amount">¥0</div>
+            <div class="stat-sub">已完成 <span id="stat-done-amount">¥0</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">已到账金额</div>
+            <div class="stat-value" id="stat-received">¥0</div>
+            <div class="stat-sub">到账率 <span id="stat-rate">0%</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⏳</div>
+          <div class="stat-info">
+            <div class="stat-label">逾期未开票</div>
+            <div class="stat-value" id="stat-overdue">¥0</div>
+            <div class="stat-sub">有逾期合同 <span id="stat-overdue-count">0</span> 份</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-box">
+          <h3>📈 合同状态分布</h3>
+          <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>📊 月度到账趋势</h3>
+          <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3>🔝 合同金额 TOP 10</h3>
+        </div>
+        <table>
+          <thead><tr><th>序号</th><th>合同名称</th><th>对方单位</th><th style="text-align:right">合同总额(万元)</th><th style="text-align:right">已到账(万元)</th><th>状态</th><th>进度</th></tr></thead>
+          <tbody id="top10-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Contract List -->
+    <div class="page" id="page-list">
+      <div class="table-box">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input class="search-input" id="search-input" placeholder="🔍 搜索合同名称或对方单位...">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="执行中">执行中</button>
+            <button class="filter-btn" data-filter="已完成">已完成</button>
+            <button class="filter-btn" data-filter="overdue">有逾期</button>
+          </div>
+          <div class="toolbar-right">
+            <input type="file" id="import-file" class="file-input-hidden" accept=".csv">
+            <button class="action-btn primary" onclick="addNewContract()">📄 添加合同</button>
+            <button class="action-btn" onclick="document.getElementById('import-file').click()">📥 导入CSV</button>
+            <button class="action-btn primary" onclick="exportCSV()">📤 导出CSV</button>
+            <button class="action-btn danger" onclick="confirmClear()">🗑️ 清空数据</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>序号</th><th>合同名称</th><th>对方单位</th>
+              <th style="text-align:right">总额(万元)</th><th style="text-align:right">已到账</th>
+              <th style="text-align:right">逾期未开票</th><th>状态</th><th>合同期限</th>
+            </tr>
+          </thead>
+          <tbody id="contract-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Overdue Warning -->
+    <div class="page" id="page-overdue">
+      <div class="table-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="color:#e74c3c;">⚠️ 逾期未开票合同清单</h3>
+          <button class="action-btn primary" onclick="exportCSV('overdue')">📤 导出逾期清单</button>
+        </div>
+        <table>
+          <thead><tr><th>序号</th><th>合同名称</th><th>对方单位</th><th style="text-align:right">逾期未开票(万元)</th><th>到期节点数</th><th>状态</th></tr></thead>
+          <tbody id="overdue-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel">
+    <div class="detail-header">
+      <h2 id="detail-title">合同详情</h2>
+      <div class="detail-actions">
+        <button class="action-btn success" id="detail-save-btn" onclick="saveContractEdit()">💾 保存</button>
+        <button class="action-btn danger" onclick="confirmDeleteContract()" style="padding:5px 12px;font-size:12px;">🗑️ 删除</button>
+        <button class="close-btn" onclick="closeDetail()">✕</button>
+      </div>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)hideConfirm()">
+  <div class="confirm-box">
+    <h3 id="confirm-title">确认操作</h3>
+    <p id="confirm-message">确定要执行此操作吗？</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="hideConfirm()">取消</button>
+      <button class="btn-danger" id="confirm-btn" onclick="hideConfirm()">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== SUPABASE ====================
 const SUPABASE_URL = 'https://yxvcutlwxwhvhinnjjoj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmN1dGx3eHdodmhpbm5qam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA5ODYsImV4cCI6MjA5NjU1Njk4Nn0.6DArPpTIUZbGRhuOHRJjloWJRMdmsh2h9i3VIvMVBn8';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmN1dGx3eHdodmhpbm5qam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA5ODYsImV4cCI6MjA5NjU1Njk4Nn0.6DArPpTIUZbGRhuOHRJjloWJRMdmsh2h9i3VIvMVBn8';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const STATUS_OPTIONS = ['进行中', '已结束', '已终止', '待签署'];
-const STATUS_COLORS = {
-  '进行中': 'status-active', '已结束': 'status-ended',
-  '已终止': 'status-terminated', '待签署': 'status-pending'
-};
+// ==================== DATA ====================
+let contracts = [];
+let loading = false;
+const TODAY = new Date();
+const TODAY_DATE = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
 
-// ============ Toast ============
-function Toast({ message, type, onClose }) {
-  useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
-  return <div className={`toast ${type}`}>{message}</div>;
+// ==================== DATE HELPERS ====================
+function parseDateToYM(d) {
+  if (!d) return '';
+  const parts = d.split('/');
+  if (parts.length === 3) return parts[0] + '-' + parts[1].padStart(2,'0');
+  return d.substring(0,7);
 }
-function useToast() {
-  const [toasts, setToasts] = useState([]);
-  const addToast = useCallback((m, t = 'info') => { setToasts(p => [...p, { id: Date.now(), message: m, type: t }]); }, []);
-  const removeToast = useCallback((id) => { setToasts(p => p.filter(x => x.id !== id)); }, []);
-  return { toasts, addToast, removeToast };
+function parseDateObj(d) {
+  if (!d) return null;
+  const parts = d.split('/');
+  if (parts.length !== 3) return null;
+  return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
 }
-
-// ============ Confirm Dialog ============
-function ConfirmDialog({ title, message, onConfirm, onCancel, loading }) {
-  return (
-    <div className="confirm-overlay" onClick={loading ? undefined : onCancel}>
-      <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-        <h3>{title}</h3><p>{message}</p>
-        <div className="btns">
-          <button className="btn btn-outline" onClick={onCancel} disabled={loading}>取消</button>
-          <button className="btn btn-danger" onClick={onConfirm} disabled={loading}>{loading ? '处理中...' : '确认删除'}</button>
-        </div>
-      </div>
-    </div>
-  );
+function isNodeExpired(dateStr) {
+  const d = parseDateObj(dateStr);
+  if (!d) return false;
+  return d <= TODAY_DATE;
 }
-
-// ============ Format Helpers ============
-const fmtAmount = (v) => {
-  const n = Number(v) || 0;
-  return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 万元';
-};
-const fmtDate = (d) => d ? d.slice(0, 10) : '-';
-
-// ============ Detail Modal ============
-function ContractDetail({ contract, onClose }) {
-  const milestones = contract.milestones || [];
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>合同详情</h2>
-          <button className="modal-close" onClick={onClose}>&times;</button>
-        </div>
-        <div className="modal-body">
-          {/* 基本信息 */}
-          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>基本信息</h4>
-          <div className="info-grid">
-            <div className="info-item"><div className="info-label">合同名称</div><div className="info-value">{contract.contract_name}</div></div>
-            <div className="info-item"><div className="info-label">合同序号</div><div className="info-value">{contract.contract_no}</div></div>
-            <div className="info-item"><div className="info-label">甲方</div><div className="info-value">{contract.party_a || '-'}</div></div>
-            <div className="info-item"><div className="info-label">对方单位</div><div className="info-value">{contract.party_b || '-'}</div></div>
-            <div className="info-item"><div className="info-label">合同金额</div><div className="info-value" style={{ color: '#1677ff' }}>{fmtAmount(contract.amount)}</div></div>
-            <div className="info-item"><div className="info-label">状态</div><div className="info-value"><span className={`status-tag ${STATUS_COLORS[contract.status]}`}>{contract.status}</span></div></div>
-            <div className="info-item"><div className="info-label">签订日期</div><div className="info-value">{fmtDate(contract.sign_date)}</div></div>
-            <div className="info-item"><div className="info-label">结束日期</div><div className="info-value">{fmtDate(contract.end_date)}</div></div>
-          </div>
-
-          {/* 财务汇总 */}
-          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>财务汇总</h4>
-          <div className="info-grid">
-            <div className="info-item"><div className="info-label">应付金额合计</div><div className="info-value" style={{ fontWeight: 600 }}>{fmtAmount(contract.total_receivable)}</div></div>
-            <div className="info-item"><div className="info-label">实际到账合计</div><div className="info-value" style={{ fontWeight: 600, color: '#52c41a' }}>{fmtAmount(contract.total_received)}</div></div>
-            <div className="info-item"><div className="info-label">开票金额合计</div><div className="info-value" style={{ fontWeight: 600 }}>{fmtAmount(contract.total_invoiced)}</div></div>
-            <div className="info-item"><div className="info-label">未到账金额</div><div className="info-value" style={{ fontWeight: 600, color: Number(contract.total_receivable) - Number(contract.total_received) > 0 ? '#ff4d4f' : '#999' }}>
-              {fmtAmount((Number(contract.total_receivable) || 0) - (Number(contract.total_received) || 0))}
-            </div></div>
-          </div>
-
-          {/* 节点明细 */}
-          <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 15 }}>
-            节点明细 {milestones.length > 0 && `(${milestones.length} 个节点)`}
-          </h4>
-          {milestones.length === 0 ? (
-            <p style={{ color: '#999', fontSize: 13 }}>暂无节点数据</p>
-          ) : (
-            <table className="milestone-table">
-              <thead>
-                <tr>
-                  <th>节点</th>
-                  <th>节点日期</th>
-                  <th style={{ textAlign: 'right' }}>应付金额(万元)</th>
-                  <th style={{ textAlign: 'right' }}>实际到账(万元)</th>
-                  <th style={{ textAlign: 'right' }}>开票金额(万元)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {milestones.map((m, i) => (
-                  <tr key={i}>
-                    <td style={{ fontWeight: 500 }}>{m.milestone_name || '-'}</td>
-                    <td>{fmtDate(m.milestone_date)}</td>
-                    <td style={{ textAlign: 'right' }}>{(Number(m.payable_amount) || 0).toFixed(2)}</td>
-                    <td style={{ textAlign: 'right', color: Number(m.received_amount) > 0 ? '#52c41a' : '#999' }}>{(Number(m.received_amount) || 0).toFixed(2)}</td>
-                    <td style={{ textAlign: 'right' }}>{(Number(m.invoiced_amount) || 0).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {/* 备注 */}
-          {contract.notes && (
-            <>
-              <h4 style={{ margin: '16px 0 8px', color: '#1677ff', fontSize: 15 }}>备注</h4>
-              <p style={{ fontSize: 13, color: '#666', background: '#fafafa', padding: '10px 14px', borderRadius: 6 }}>{contract.notes}</p>
-            </>
-          )}
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-outline" onClick={onClose}>关闭</button>
-        </div>
-      </div>
-    </div>
-  );
+function calcNodeOverdue(node) {
+  if (!isNodeExpired(node.date)) return 0;
+  return (node.amount || 0) - (node.invoiced || 0);
+}
+function calcContractOverdue(contract) {
+  return contract.nodes.reduce((s, n) => s + calcNodeOverdue(n), 0);
+}
+function recalcContract(c) {
+  c.totalDue = c.nodes.reduce((s,n) => s + (n.amount||0), 0);
+  c.totalReceived = c.nodes.reduce((s,n) => s + (n.received||0), 0);
+  c.totalInvoiced = c.nodes.reduce((s,n) => s + (n.invoiced||0), 0);
+  c.totalOverdue = calcContractOverdue(c);
+  c.receiveRate = c.totalAmount > 0 ? (c.totalReceived / c.totalAmount * 100) : 0;
+  c.pending = c.totalDue - c.totalReceived;
+  return c;
 }
 
-// ============ Contract Form ============
-function ContractForm({ contract, onSubmit, onCancel, loading }) {
-  const [form, setForm] = useState({
-    contract_name: '', contract_no: '', party_a: '', party_b: '',
-    amount: '', sign_date: '', end_date: '', status: '进行中',
-    notes: '', total_receivable: '', total_received: '', total_invoiced: ''
-  });
+// ==================== SUPABASE OPERATIONS ====================
+// Mapping: DB ↔ Internal
+// DB: id(seq), contract_no, contract_name, party_b, amount, sign_date, end_date, status, milestones, total_receivable, total_received, total_invoiced, notes
+// Internal: id, name, company, totalAmount, startDate, endDate, status, nodes[], totalDue, totalReceived, totalInvoiced, totalOverdue, receiveRate, pending, notes
 
-  useEffect(() => {
-    if (contract) {
-      setForm({
-        contract_name: contract.contract_name || '',
-        contract_no: contract.contract_no || '',
-        party_a: contract.party_a || '',
-        party_b: contract.party_b || '',
-        amount: contract.amount?.toString() || '',
-        sign_date: contract.sign_date || '',
-        end_date: contract.end_date || '',
-        status: contract.status || '进行中',
-        notes: contract.notes || '',
-        total_receivable: contract.total_receivable?.toString() || '',
-        total_received: contract.total_received?.toString() || '',
-        total_invoiced: contract.total_invoiced?.toString() || ''
+function dbToInternal(dbRow) {
+  const nodes = (dbRow.milestones || []).map(m => ({
+    name: m.milestone_name || '',
+    date: m.milestone_date || '',
+    amount: m.payable_amount || 0,
+    received: m.received_amount || 0,
+    invoiced: m.invoiced_amount || 0,
+    overdue: 0,
+    remark: m.remark || ''
+  }));
+  const c = {
+    id: parseInt(dbRow.contract_no) || 0,
+    name: dbRow.contract_name || '',
+    company: dbRow.party_b || '',
+    totalAmount: Number(dbRow.amount) || 0,
+    status: dbRow.status || '执行中',
+    startDate: dbRow.sign_date || '',
+    endDate: dbRow.end_date || '',
+    notes: dbRow.notes || '',
+    nodes: nodes,
+    totalDue: Number(dbRow.total_receivable) || 0,
+    totalReceived: Number(dbRow.total_received) || 0,
+    totalInvoiced: Number(dbRow.total_invoiced) || 0
+  };
+  return recalcContract(c);
+}
+
+function internalToDb(c) {
+  return {
+    contract_no: String(c.id),
+    contract_name: c.name,
+    party_b: c.company,
+    amount: c.totalAmount,
+    sign_date: c.startDate,
+    end_date: c.endDate,
+    status: c.status,
+    notes: c.notes || '',
+    milestones: (c.nodes || []).map(n => ({
+      milestone_name: n.name || '',
+      milestone_date: n.date || '',
+      payable_amount: n.amount || 0,
+      received_amount: n.received || 0,
+      invoiced_amount: n.invoiced || 0,
+      remark: n.remark || ''
+    })),
+    total_receivable: c.totalDue || 0,
+    total_received: c.totalReceived || 0,
+    total_invoiced: c.totalInvoiced || 0
+  };
+}
+
+async function loadContracts() {
+  try {
+    const { data, error } = await supabase.from('contracts').select('*');
+    if (error) throw error;
+    contracts = (data || []).map(dbToInternal);
+    reloadAll();
+  } catch (err) {
+    showToast('加载数据失败: ' + err.message, 'error');
+  }
+}
+
+async function saveContract(c) {
+  const db = internalToDb(c);
+  // Upsert by contract_no
+  const { error } = await supabase.from('contracts').upsert(db, { onConflict: 'contract_no' });
+  if (error) throw error;
+}
+
+async function deleteContract(id) {
+  const { error } = await supabase.from('contracts').delete().eq('contract_no', String(id));
+  if (error) throw error;
+}
+
+async function replaceAllContracts(list) {
+  // Delete all then insert
+  const { error: delErr } = await supabase.from('contracts').delete().neq('id', 0);
+  if (delErr) throw delErr;
+  if (list.length === 0) return;
+  const dbList = list.map(internalToDb);
+  const { error: insErr } = await supabase.from('contracts').insert(dbList);
+  if (insErr) throw insErr;
+}
+
+// ==================== REALTIME ====================
+function setupRealtime() {
+  const channel = supabase
+    .channel('contracts-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, async () => {
+      await loadContracts();
+    })
+    .subscribe((status) => {
+      const dot = document.getElementById('realtime-dot');
+      const label = document.getElementById('realtime-label');
+      if (status === 'SUBSCRIBED') {
+        dot.className = 'realtime-dot online';
+        label.textContent = '实时连接';
+      } else {
+        dot.className = 'realtime-dot offline';
+        label.textContent = '连接断开';
+      }
+    });
+}
+
+// ==================== PARSING ====================
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  // Simple split for this known format
+  const result = [];
+  const headers = lines[0].split(',');
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = lines[i].split(',');
+    if (vals.length < 10) continue;
+    const row = {};
+    headers.forEach((h, j) => { row[h.trim()] = (vals[j] || '').trim(); });
+    result.push(row);
+  }
+  return result;
+}
+
+function buildContracts(rows) {
+  const map = new Map();
+  rows.forEach(r => {
+    const id = parseInt(r['合同序号']);
+    if (!id) return;
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        name: r['合同名称'] || '',
+        company: r['对方单位'] || '',
+        totalAmount: parseFloat(r['合同总额']) || 0,
+        status: r['合同状态'] || '执行中',
+        startDate: r['合同起始'] || '',
+        endDate: r['合同截止'] || '',
+        notes: '',
+        nodes: []
       });
     }
-  }, [contract]);
-
-  const handleChange = (f) => (e) => setForm(p => ({ ...p, [f]: e.target.value }));
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.contract_name.trim()) { alert('请输入合同名称'); return; }
-    if (!form.contract_no.trim()) { alert('请输入合同序号'); return; }
-    if (!form.amount || isNaN(Number(form.amount))) { alert('请输入有效金额'); return; }
-    onSubmit({
-      ...form,
-      amount: Number(form.amount),
-      total_receivable: Number(form.total_receivable) || 0,
-      total_received: Number(form.total_received) || 0,
-      total_invoiced: Number(form.total_invoiced) || 0
+    const c = map.get(id);
+    c.nodes.push({
+      name: r['节点'] || '',
+      date: r['节点日期'] || '',
+      amount: parseFloat(r['应付金额']) || 0,
+      received: parseFloat(r['实际到账']) || 0,
+      invoiced: parseFloat(r['开票金额']) || 0,
+      overdue: 0,
+      remark: r['备注'] || ''
     });
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="modal-body">
-        <h4 style={{ marginBottom: 12, color: '#1677ff', fontSize: 14 }}>基本信息</h4>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>合同名称 *</label>
-            <input value={form.contract_name} onChange={handleChange('contract_name')} placeholder="请输入" />
-          </div>
-          <div className="form-group">
-            <label>合同序号 *</label>
-            <input value={form.contract_no} onChange={handleChange('contract_no')} placeholder="请输入" />
-          </div>
-          <div className="form-group">
-            <label>甲方</label>
-            <input value={form.party_a} onChange={handleChange('party_a')} placeholder="甲方名称" />
-          </div>
-          <div className="form-group">
-            <label>对方单位</label>
-            <input value={form.party_b} onChange={handleChange('party_b')} placeholder="对方单位" />
-          </div>
-          <div className="form-group">
-            <label>合同金额 (万元) *</label>
-            <input value={form.amount} onChange={handleChange('amount')} type="number" step="0.01" min="0" placeholder="0.00" />
-          </div>
-          <div className="form-group">
-            <label>状态</label>
-            <select value={form.status} onChange={handleChange('status')}>
-              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>签订日期</label>
-            <input value={form.sign_date} onChange={handleChange('sign_date')} type="date" />
-          </div>
-          <div className="form-group">
-            <label>结束日期</label>
-            <input value={form.end_date} onChange={handleChange('end_date')} type="date" />
-          </div>
-        </div>
-
-        <h4 style={{ margin: '16px 0 12px', color: '#1677ff', fontSize: 14 }}>财务信息</h4>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>应付金额合计 (万元)</label>
-            <input value={form.total_receivable} onChange={handleChange('total_receivable')} type="number" step="0.01" min="0" placeholder="0.00" />
-          </div>
-          <div className="form-group">
-            <label>实际到账合计 (万元)</label>
-            <input value={form.total_received} onChange={handleChange('total_received')} type="number" step="0.01" min="0" placeholder="0.00" />
-          </div>
-          <div className="form-group">
-            <label>开票金额合计 (万元)</label>
-            <input value={form.total_invoiced} onChange={handleChange('total_invoiced')} type="number" step="0.01" min="0" placeholder="0.00" />
-          </div>
-        </div>
-
-        <div className="form-group full" style={{ marginTop: 14 }}>
-          <label>备注</label>
-          <textarea value={form.notes} onChange={handleChange('notes')} rows={3} placeholder="备注信息（可选）" />
-        </div>
-      </div>
-      <div className="modal-footer">
-        <button type="button" className="btn btn-outline" onClick={onCancel} disabled={loading}>取消</button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? '保存中...' : (contract ? '更新合同' : '添加合同')}
-        </button>
-      </div>
-    </form>
-  );
+  });
+  return Array.from(map.values()).map(recalcContract);
 }
 
-// ============ Main App ============
-function App() {
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [sortField, setSortField] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [page, setPage] = useState(1);
-  const pageSize = 15;
-  const [showModal, setShowModal] = useState(false);
-  const [editingContract, setEditingContract] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [detailTarget, setDetailTarget] = useState(null);
-  const [realtimeStatus, setRealtimeStatus] = useState('connected');
-  const [importTargets, setImportTargets] = useState(null);
-  const [importing, setImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
-  const [clearStep, setClearStep] = useState(0); // 0=hidden, 1=first confirm, 2=type YES
-  const [clearing, setClearing] = useState(false);
-  const { toasts, addToast, removeToast } = useToast();
-  const channelRef = useRef(null);
-  const fileInputRef = useRef(null);
+// ==================== NAVIGATION ====================
+let currentFilter = 'all';
+let currentSearch = '';
+let detailContractId = null;
 
-  // ---- Fetch ----
-  const fetchContracts = useCallback(async () => {
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  const titles = { dashboard: '📊 工作台', list: '📑 合同列表', overdue: '⚠️ 逾期预警' };
+  document.getElementById('page-title').textContent = titles[page];
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'list') loadContractList();
+  if (page === 'overdue') loadOverdue();
+}
+
+// ==================== HELPERS ====================
+function fmtMoney(n) {
+  if (isNaN(n)) return '¥0';
+  return '¥' + n.toFixed(2);
+}
+function fmtDate(d) { return d || '--'; }
+function fmtRange(s, e) {
+  if (!s && !e) return '--';
+  return (s||'--') + ' ~ ' + (e||'--');
+}
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'info') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+let confirmCallback = null;
+function showConfirm(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function hideConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  confirmCallback = null;
+}
+document.getElementById('confirm-btn').addEventListener('click', function() {
+  if (confirmCallback) confirmCallback();
+  hideConfirm();
+});
+
+function reloadAll() {
+  loadDashboard();
+  loadContractList();
+  loadOverdue();
+  updateBadges();
+}
+
+function updateBadges() {
+  const activeCount = contracts.filter(c => c.status === '执行中').length;
+  const overdueCount = contracts.filter(c => c.totalOverdue > 0).length;
+  document.getElementById('active-badge').textContent = activeCount;
+  document.getElementById('active-badge').className = 'badge' + (activeCount > 0 ? ' show' : '');
+  document.getElementById('overdue-badge').textContent = overdueCount;
+  document.getElementById('overdue-badge').className = 'badge' + (overdueCount > 0 ? ' show' : '');
+  document.getElementById('total-count').textContent = contracts.length;
+}
+
+// ==================== DASHBOARD ====================
+function loadDashboard() {
+  const totalAmount = contracts.reduce((s,c) => s + c.totalAmount, 0);
+  const totalReceived = contracts.reduce((s,c) => s + c.totalReceived, 0);
+  const totalOverdue = contracts.reduce((s,c) => s + c.totalOverdue, 0);
+  const activeCount = contracts.filter(c => c.status === '执行中').length;
+  const doneCount = contracts.filter(c => c.status === '已完成').length;
+  const doneAmount = contracts.filter(c => c.status === '已完成').reduce((s,c) => s + c.totalAmount, 0);
+  const overdueCount = contracts.filter(c => c.totalOverdue > 0).length;
+
+  document.getElementById('stat-total').textContent = contracts.length;
+  document.getElementById('stat-active').textContent = activeCount;
+  document.getElementById('stat-amount').textContent = fmtMoney(totalAmount);
+  document.getElementById('stat-done-amount').textContent = fmtMoney(doneAmount);
+  document.getElementById('stat-received').textContent = fmtMoney(totalReceived);
+  document.getElementById('stat-rate').textContent = totalAmount > 0 ? (totalReceived/totalAmount*100).toFixed(1) + '%' : '0%';
+  document.getElementById('stat-overdue').textContent = fmtMoney(totalOverdue);
+  document.getElementById('stat-overdue-count').textContent = overdueCount;
+
+  // Status chart
+  const ctx1 = document.getElementById('chart-status');
+  if (ctx1._chart) ctx1._chart.destroy();
+  if (contracts.length) {
+    ctx1._chart = new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['执行中', '已完成'],
+        datasets: [{ data: [activeCount, doneCount], backgroundColor: ['#4e7cff', '#b7eb8f'], borderWidth: 0, hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 13 } } } }
+      }
+    });
+  }
+
+  // Monthly trend
+  const monthlyMap = {};
+  contracts.forEach(c => {
+    c.nodes.forEach(n => {
+      if (n.received > 0 && n.date) {
+        const ym = parseDateToYM(n.date);
+        if (ym) monthlyMap[ym] = (monthlyMap[ym] || 0) + n.received;
+      }
+    });
+  });
+  const sortedMonths = Object.keys(monthlyMap).sort().slice(-12);
+  const monthlyValues = sortedMonths.map(m => monthlyMap[m]);
+  const ctx2 = document.getElementById('chart-monthly');
+  if (ctx2._chart) ctx2._chart.destroy();
+  if (sortedMonths.length) {
+    ctx2._chart = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: sortedMonths,
+        datasets: [{ label: '到账金额(万元)', data: monthlyValues, backgroundColor: 'rgba(78,124,255,0.7)', borderRadius: 4, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => v + '万' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+
+  // Top 10
+  const top10 = [...contracts].sort((a,b) => b.totalAmount - a.totalAmount).slice(0,10);
+  document.getElementById('top10-table').innerHTML = top10.map(c => {
+    const pct = c.totalAmount > 0 ? (c.totalReceived/c.totalAmount*100).toFixed(0) : 0;
+    const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+    return `<tr class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td title="${c.name}">${c.name.length>30?c.name.substring(0,30)+'...':c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount">${fmtMoney(c.totalAmount)}</td>
+      <td class="amount">${fmtMoney(c.totalReceived)}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+      <td style="width:120px"><div style="background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px"></div></div><span style="font-size:11px;color:#888">${pct}%</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div><p>暂无合同数据</p></div></td></tr>';
+}
+
+// ==================== CONTRACT LIST ====================
+function loadContractList() {
+  let filtered = contracts;
+  if (currentFilter === '执行中') filtered = filtered.filter(c => c.status === '执行中');
+  if (currentFilter === '已完成') filtered = filtered.filter(c => c.status === '已完成');
+  if (currentFilter === 'overdue') filtered = filtered.filter(c => c.totalOverdue > 0);
+  if (currentSearch) {
+    const s = currentSearch.toLowerCase();
+    filtered = filtered.filter(c => (c.name||'').toLowerCase().includes(s) || (c.company||'').toLowerCase().includes(s));
+  }
+  document.getElementById('contract-table').innerHTML = filtered.map(c => {
+    const overdueClass = c.totalOverdue > 0 ? ' class="alert-row"' : '';
+    return `<tr${overdueClass} class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td title="${c.name}">${c.name.length>28?c.name.substring(0,28)+'...':c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount">${fmtMoney(c.totalAmount)}</td>
+      <td class="amount" style="color:#13c2c2">${fmtMoney(c.totalReceived)}</td>
+      <td class="amount" style="color:${c.totalOverdue>0?'#e74c3c':'#999'}">${fmtMoney(c.totalOverdue)}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+      <td style="font-size:12px;color:#888">${fmtRange(c.startDate, c.endDate)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8"><div class="empty-state"><div class="icon">📭</div><p>无匹配合同</p></div></td></tr>';
+}
+
+// ==================== OVERDUE ====================
+function loadOverdue() {
+  const overdue = contracts.filter(c => c.totalOverdue > 0).sort((a,b) => b.totalOverdue - a.totalOverdue);
+  document.getElementById('overdue-table').innerHTML = overdue.map(c => {
+    const expiredCount = c.nodes.filter(n => isNodeExpired(n.date)).length;
+    return `<tr class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td>${c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount" style="color:#e74c3c;font-weight:700">${fmtMoney(c.totalOverdue)}</td>
+      <td style="text-align:center">${expiredCount} / ${c.nodes.length}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6"><div class="empty-state"><div class="icon">🎉</div><p>暂无逾期合同</p></div></td></tr>';
+}
+
+// ==================== DETAIL ====================
+function openDetail(id) {
+  const c = contracts.find(x => x.id === id);
+  if (!c) return;
+  detailContractId = id;
+  document.getElementById('detail-title').textContent = `#${c.id} ${c.name}`;
+
+  const pct = c.totalAmount > 0 ? (c.totalReceived/c.totalAmount*100).toFixed(0) : 0;
+  const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+
+  const expiredIndexes = new Set();
+  c.nodes.forEach((n, i) => { if (isNodeExpired(n.date)) expiredIndexes.add(i); });
+
+  const nodesHTML = c.nodes.map((n, i) => {
+    const nodeOverdue = calcNodeOverdue(n);
+    const isExpired = expiredIndexes.has(i);
+    const rowClass = isExpired && n.received <= 0 ? 'node-row-overdue' : '';
+    return `<tr class="${rowClass}">
+      <td><input class="edit-node-name" value="${(n.name||'').replace(/"/g,'&quot;')}" data-idx="${i}"></td>
+      <td><input class="edit-node-date" value="${n.date||''}" data-idx="${i}"></td>
+      <td><input class="edit-node-amount" type="number" step="0.01" value="${n.amount||0}" data-idx="${i}" style="text-align:right"></td>
+      <td><input class="edit-node-received" type="number" step="0.01" value="${n.received||0}" data-idx="${i}" style="text-align:right"></td>
+      <td><input class="edit-node-invoiced" type="number" step="0.01" value="${n.invoiced||0}" data-idx="${i}" style="text-align:right"></td>
+      <td style="text-align:center"><span class="overdue-auto" data-idx="${i}" style="color:${nodeOverdue>0?'#e74c3c':nodeOverdue<0?'#fa8c16':'#999'}">${fmtMoney(nodeOverdue)}</span></td>
+      <td><input class="edit-node-remark" value="${(n.remark||'').replace(/"/g,'&quot;')}" data-idx="${i}"></td>
+      <td style="text-align:center"><button class="action-btn danger" onclick="removeNode(${i})" style="padding:3px 8px;font-size:11px;">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-info-grid">
+      <div class="editable-field">
+        <div class="label">合同名称</div>
+        <input id="edit-name" value="${(c.name||'').replace(/"/g,'&quot;')}">
+      </div>
+      <div class="editable-field">
+        <div class="label">对方单位</div>
+        <input id="edit-company" value="${(c.company||'').replace(/"/g,'&quot;')}">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同总额（万元）</div>
+        <input id="edit-total" type="number" step="0.01" value="${c.totalAmount}">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同状态</div>
+        <select id="edit-status">
+          <option value="执行中" ${c.status==='执行中'?'selected':''}>执行中</option>
+          <option value="已完成" ${c.status==='已完成'?'selected':''}>已完成</option>
+        </select>
+      </div>
+      <div class="editable-field">
+        <div class="label">合同起始</div>
+        <input id="edit-start" value="${c.startDate||''}" placeholder="如 2025/1/1">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同截止</div>
+        <input id="edit-end" value="${c.endDate||''}" placeholder="如 2025/12/31">
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h4>💰 收款进度</h4>
+        <span style="font-size:14px;font-weight:600;color:${barColor}" id="progress-summary">
+          ${fmtMoney(c.totalReceived)} / ${fmtMoney(c.totalAmount)} (${pct}%)
+        </span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill blue" id="progress-bar" style="width:${pct}%"></div></div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h4>📋 付款节点</h4>
+        <span style="font-size:12px;color:#999">
+          到期节点 <strong id="expired-count">${expiredIndexes.size}</strong> / ${c.nodes.length} ·
+          逾期未开票 <strong id="overdue-summary" style="color:${c.totalOverdue>0?'#e74c3c':c.totalOverdue<0?'#fa8c16':'#999'}">${fmtMoney(c.totalOverdue)}</strong>
+        </span>
+      </div>
+      <div class="node-table-wrap">
+        <table class="node-table">
+          <thead>
+            <tr><th>节点名称</th><th>日期</th><th style="text-align:right">应付金额</th><th style="text-align:right">实际到账</th><th style="text-align:right">开票金额</th><th style="text-align:center">逾期未开票(自动)</th><th>备注</th><th style="width:40px"></th></tr>
+          </thead>
+          <tbody id="node-tbody">${nodesHTML}</tbody>
+        </table>
+      </div>
+      <button class="node-add-btn" onclick="addNode()">+ 添加节点</button>
+    </div>
+  `;
+
+  document.querySelectorAll('.edit-node-amount, .edit-node-received, .edit-node-invoiced, .edit-node-date').forEach(el => {
+    el.addEventListener('input', function() { updateNodeOverdue(); updateProgress(); });
+  });
+  document.getElementById('edit-total').addEventListener('input', updateProgress);
+
+  document.getElementById('detail-overlay').classList.add('show');
+}
+
+function updateNodeOverdue() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr');
+  let totalOverdue = 0, expiredCount = 0;
+  rows.forEach((tr, i) => {
+    const dateInput = tr.querySelector('.edit-node-date');
+    const amountInput = tr.querySelector('.edit-node-amount');
+    const invoicedInput = tr.querySelector('.edit-node-invoiced');
+    const receivedInput = tr.querySelector('.edit-node-received');
+    const overdueSpan = tr.querySelector('.overdue-auto');
+    if (!dateInput || !amountInput || !invoicedInput || !overdueSpan) return;
+    const dateVal = dateInput.value;
+    const amountVal = parseFloat(amountInput.value) || 0;
+    const invoicedVal = parseFloat(invoicedInput.value) || 0;
+    const receivedVal = parseFloat(receivedInput ? receivedInput.value : 0) || 0;
+    const isExpired = isNodeExpired(dateVal);
+    if (isExpired) expiredCount++;
+    const overdue = isExpired ? amountVal - invoicedVal : 0;
+    totalOverdue += overdue;
+    overdueSpan.textContent = fmtMoney(overdue);
+    overdueSpan.style.color = overdue > 0 ? '#e74c3c' : overdue < 0 ? '#fa8c16' : '#999';
+    tr.className = isExpired && receivedVal <= 0 ? 'node-row-overdue' : '';
+  });
+  const expiredEl = document.getElementById('expired-count');
+  if (expiredEl) expiredEl.textContent = expiredCount;
+  const summaryEl = document.getElementById('overdue-summary');
+  if (summaryEl) {
+    summaryEl.textContent = fmtMoney(totalOverdue);
+    summaryEl.style.color = totalOverdue > 0 ? '#e74c3c' : totalOverdue < 0 ? '#fa8c16' : '#999';
+  }
+}
+
+function updateProgress() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  let totalReceived = 0, totalDue = 0;
+  tbody.querySelectorAll('tr').forEach(tr => {
+    totalDue += parseFloat(tr.querySelector('.edit-node-amount')?.value) || 0;
+    totalReceived += parseFloat(tr.querySelector('.edit-node-received')?.value) || 0;
+  });
+  const contractTotal = parseFloat(document.getElementById('edit-total').value) || 0;
+  const displayTotal = Math.max(contractTotal, totalDue);
+  const pct = displayTotal > 0 ? (totalReceived/displayTotal*100).toFixed(0) : 0;
+  const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+  const summary = document.getElementById('progress-summary');
+  if (summary) {
+    summary.textContent = `${fmtMoney(totalReceived)} / ${fmtMoney(displayTotal)} (${pct}%)`;
+    summary.style.color = barColor;
+  }
+  const bar = document.getElementById('progress-bar');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = `linear-gradient(90deg, ${barColor}, ${barColor}88)`;
+  }
+}
+
+function addNode() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  const idx = tbody.children.length;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="edit-node-name" value="节点${idx+1}"></td>
+    <td><input class="edit-node-date" value=""></td>
+    <td><input class="edit-node-amount" type="number" step="0.01" value="0" style="text-align:right"></td>
+    <td><input class="edit-node-received" type="number" step="0.01" value="0" style="text-align:right"></td>
+    <td><input class="edit-node-invoiced" type="number" step="0.01" value="0" style="text-align:right"></td>
+    <td style="text-align:center"><span class="overdue-auto" style="color:#999">¥0</span></td>
+    <td><input class="edit-node-remark" value=""></td>
+    <td style="text-align:center"><button class="action-btn danger" onclick="removeNode(${idx})" style="padding:3px 8px;font-size:11px;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelectorAll('.edit-node-amount, .edit-node-received, .edit-node-invoiced, .edit-node-date').forEach(el => {
+    el.addEventListener('input', function() { updateNodeOverdue(); updateProgress(); });
+  });
+  updateNodeOverdue();
+  updateProgress();
+}
+
+function removeNode(idx) {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody || tbody.children.length <= 1) {
+    showToast('至少保留一个节点', 'error');
+    return;
+  }
+  showConfirm('删除节点', `确定要删除节点 ${idx+1} 吗？`, () => {
+    tbody.children[idx].remove();
+    updateNodeOverdue();
+    updateProgress();
+  });
+}
+
+// ==================== SAVE ====================
+async function saveContractEdit() {
+  const id = detailContractId;
+  if (!id) return;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { showToast('合同名称不能为空', 'error'); return; }
+  const company = document.getElementById('edit-company').value.trim();
+  const totalAmount = parseFloat(document.getElementById('edit-total').value) || 0;
+  const status = document.getElementById('edit-status').value;
+  const startDate = document.getElementById('edit-start').value.trim();
+  const endDate = document.getElementById('edit-end').value.trim();
+
+  const tbody = document.getElementById('node-tbody');
+  const nodes = [];
+  tbody.querySelectorAll('tr').forEach(tr => {
+    nodes.push({
+      name: tr.querySelector('.edit-node-name')?.value || '',
+      date: tr.querySelector('.edit-node-date')?.value || '',
+      amount: parseFloat(tr.querySelector('.edit-node-amount')?.value) || 0,
+      received: parseFloat(tr.querySelector('.edit-node-received')?.value) || 0,
+      invoiced: parseFloat(tr.querySelector('.edit-node-invoiced')?.value) || 0,
+      overdue: 0,
+      remark: tr.querySelector('.edit-node-remark')?.value || ''
+    });
+  });
+  if (nodes.length === 0) { showToast('至少需要一个节点', 'error'); return; }
+
+  let c = contracts.find(x => x.id === id);
+  if (!c) { showToast('合同不存在', 'error'); return; }
+  c.name = name;
+  c.company = company;
+  c.totalAmount = totalAmount;
+  c.status = status;
+  c.startDate = startDate;
+  c.endDate = endDate;
+  c.nodes = nodes;
+  recalcContract(c);
+
+  try {
+    await saveContract(c);
+    showToast(`合同 #${id} 已保存`, 'success');
+    closeDetail();
+    reloadAll();
+  } catch (err) {
+    showToast('保存失败: ' + err.message, 'error');
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('show');
+  detailContractId = null;
+}
+
+// ==================== DELETE ====================
+function confirmDeleteContract() {
+  const id = detailContractId;
+  if (!id) return;
+  showConfirm('确认删除', `确定要删除合同 #${id} 吗？数据不可恢复。`, async () => {
     try {
-      const { data, error } = await supabase.from('contracts').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      setContracts(data || []);
+      await deleteContract(id);
+      contracts = contracts.filter(c => c.id !== id);
+      closeDetail();
+      reloadAll();
+      showToast(`合同 #${id} 已删除`, 'success');
     } catch (err) {
-      addToast('加载合同失败: ' + err.message, 'error');
-    } finally { setLoading(false); }
-  }, [addToast]);
-
-  // ---- Realtime ----
-  useEffect(() => {
-    fetchContracts();
-    const channel = supabase.channel('contracts-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, (payload) => {
-        setContracts(prev => {
-          if (payload.eventType === 'INSERT') return prev.find(c => c.id === payload.new.id) ? prev : [payload.new, ...prev];
-          if (payload.eventType === 'UPDATE') return prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c);
-          if (payload.eventType === 'DELETE') return prev.filter(c => c.id !== payload.old.id);
-          return prev;
-        });
-        addToast(
-          payload.eventType === 'INSERT' ? `新合同已添加: ${payload.new.contract_name}` :
-          payload.eventType === 'UPDATE' ? `合同已更新: ${payload.new.contract_name}` : '合同已删除', 'info');
-      })
-      .subscribe((status) => setRealtimeStatus(status === 'SUBSCRIBED' ? 'connected' : 'disconnected'));
-    channelRef.current = channel;
-    return () => supabase.removeChannel(channel);
-  }, [fetchContracts, addToast]);
-
-  // ---- Filter, Sort ----
-  const filteredContracts = useMemo(() => {
-    let r = [...contracts];
-    if (search.trim()) {
-      const kw = search.trim().toLowerCase();
-      r = r.filter(c =>
-        (c.contract_name || '').toLowerCase().includes(kw) ||
-        (c.contract_no || '').toLowerCase().includes(kw) ||
-        (c.party_b || '').toLowerCase().includes(kw) ||
-        (c.party_a || '').toLowerCase().includes(kw) ||
-        (c.notes || '').toLowerCase().includes(kw));
+      showToast('删除失败: ' + err.message, 'error');
     }
-    if (statusFilter) r = r.filter(c => c.status === statusFilter);
-    r.sort((a, b) => {
-      let va = a[sortField], vb = b[sortField];
-      if (sortField === 'amount' || sortField === 'total_receivable' || sortField === 'total_received' || sortField === 'total_invoiced') {
-        va = Number(va) || 0; vb = Number(vb) || 0;
-      } else { va = va || ''; vb = vb || ''; }
-      return va < vb ? (sortOrder === 'asc' ? -1 : 1) : va > vb ? (sortOrder === 'asc' ? 1 : -1) : 0;
-    });
-    return r;
-  }, [contracts, search, statusFilter, sortField, sortOrder]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredContracts.length / pageSize));
-  const pagedContracts = filteredContracts.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
-
-  // ---- Stats ----
-  const stats = useMemo(() => {
-    const total = contracts.length;
-    const totalAmount = contracts.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-    const activeCount = contracts.filter(c => c.status === '进行中').length;
-    const activeAmount = contracts.filter(c => c.status === '进行中').reduce((s, c) => s + (Number(c.amount) || 0), 0);
-    const totalReceivable = contracts.reduce((s, c) => s + (Number(c.total_receivable) || 0), 0);
-    const totalReceived = contracts.reduce((s, c) => s + (Number(c.total_received) || 0), 0);
-    return { total, totalAmount, activeCount, activeAmount, totalReceivable, totalReceived };
-  }, [contracts]);
-
-  // ---- Sort ----
-  const handleSort = (f) => { if (sortField === f) setSortOrder(p => p === 'asc' ? 'desc' : 'asc'); else { setSortField(f); setSortOrder('asc'); } };
-  const sortIcon = (f) => sortField !== f ? ' ↕' : (sortOrder === 'asc' ? ' ↑' : ' ↓');
-
-  // ---- Submit ----
-  const handleSubmit = async (fd) => {
-    setSaving(true);
-    try {
-      if (editingContract) {
-        const { error } = await supabase.from('contracts').update({ ...fd, updated_at: new Date().toISOString() }).eq('id', editingContract.id);
-        if (error) throw error;
-        addToast('合同更新成功', 'success');
-      } else {
-        const { error } = await supabase.from('contracts').insert([fd]);
-        if (error) throw error;
-        addToast('合同添加成功', 'success');
-      }
-      setShowModal(false);
-      setEditingContract(null);
-    } catch (err) { addToast('保存失败: ' + err.message, 'error'); }
-    finally { setSaving(false); }
-  };
-
-  // ---- Delete ----
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const { error } = await supabase.from('contracts').delete().eq('id', deleteTarget.id);
-      if (error) throw error;
-      addToast(`合同"${deleteTarget.contract_name}"已删除`, 'success');
-      setDeleteTarget(null);
-    } catch (err) { addToast('删除失败: ' + err.message, 'error'); }
-    finally { setDeleting(false); }
-  };
-
-  // ---- Clear All ----
-  const [clearConfirmText, setClearConfirmText] = useState('');
-  const handleClearAll = async () => {
-    setClearing(true);
-    try {
-      const { error } = await supabase.from('contracts').delete().neq('id', 0);
-      if (error) throw error;
-      addToast('所有合同已清除', 'success');
-      setClearStep(0);
-      setClearConfirmText('');
-    } catch (err) { addToast('清除失败: ' + err.message, 'error'); }
-    finally { setClearing(false); }
-  };
-
-  // ---- Export ----
-  const exportCSV = () => {
-    const headers = ['合同序号', '合同名称', '对方单位', '合同总额(万元)', '状态', '签订日期', '结束日期',
-      '应付金额合计(万元)', '实际到账合计(万元)', '开票金额合计(万元)', '节点明细', '备注'];
-    const rows = filteredContracts.map(c => {
-      const milestones = c.milestones || [];
-      const detailStr = milestones.map(m =>
-        `${m.milestone_name||''}(${fmtDate(m.milestone_date)}):应付${Number(m.payable_amount||0).toFixed(2)}到账${Number(m.received_amount||0).toFixed(2)}开票${Number(m.invoiced_amount||0).toFixed(2)}`
-      ).join('; ');
-      return [c.contract_no, c.contract_name, c.party_b, c.amount, c.status, c.sign_date, c.end_date,
-        c.total_receivable || 0, c.total_received || 0, c.total_invoiced || 0, detailStr, c.notes || ''];
-    });
-    const csv = [headers, ...rows].map(r => r.map(cell => `"${(cell||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `合同数据_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-    URL.revokeObjectURL(blob);
-    addToast('CSV导出成功', 'success');
-  };
-
-  // ============ CSV Parse ============
-  const parseCSVLine = (line) => {
-    const r = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-      else if (ch === ',' && !inQ) { r.push(cur); cur = ''; }
-      else cur += ch;
-    }
-    r.push(cur); return r;
-  };
-  const convDate = (s) => {
-    if (!s) return '';
-    const p = s.split('/');
-    return p.length === 3 ? `${p[0].padStart(4,'0')}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}` : s;
-  };
-
-  // ---- Import ----
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const lines = evt.target.result.split('\n').filter(l => l.trim());
-      if (lines.length < 2) { addToast('CSV为空或格式错误', 'error'); return; }
-
-      // Group by contract index, collecting ALL milestones
-      const idxMap = {};  // idx -> { first row info, milestones[] }
-      for (let i = 1; i < lines.length; i++) {
-        const row = parseCSVLine(lines[i]);
-        if (row.length < 13) continue;
-        const idx = row[0].trim();
-        if (!idx) continue;
-
-        if (!idxMap[idx]) {
-          const rawStatus = (row[4] || '').trim();
-          idxMap[idx] = {
-            contract_no: idx,
-            contract_name: (row[1] || '').trim(),
-            party_b: (row[2] || '').trim(),
-            amount: parseFloat(row[3]) || 0,
-            status: rawStatus === '已完成' ? '已结束' : (rawStatus || '进行中'),
-            sign_date: convDate((row[5] || '').trim()),
-            end_date: convDate((row[6] || '').trim()),
-            notes: (row[12] || '').trim(),
-            milestones: [],
-            total_receivable: 0,
-            total_received: 0,
-            total_invoiced: 0
-          };
-        }
-
-        // Collect milestone
-        const mName = (row[7] || '').trim();
-        const mDate = convDate((row[8] || '').trim());
-        const payable = parseFloat(row[9]) || 0;
-        const received = parseFloat(row[10]) || 0;
-        const invoiced = parseFloat(row[11]) || 0;
-
-        if (mName || mDate || payable) {
-          idxMap[idx].milestones.push({
-            milestone_name: mName,
-            milestone_date: mDate,
-            payable_amount: payable,
-            received_amount: received,
-            invoiced_amount: invoiced
-          });
-        }
-        idxMap[idx].total_receivable += payable;
-        idxMap[idx].total_received += received;
-        idxMap[idx].total_invoiced += invoiced;
-      }
-
-      const list = Object.values(idxMap);
-      if (list.length === 0) { addToast('未解析到有效合同', 'error'); return; }
-      setImportTargets(list);
-    };
-    reader.readAsText(file, 'UTF-8');
-    e.target.value = '';
-  };
-
-  // ---- Execute Import ----
-  const handleImportConfirm = async () => {
-    if (!importTargets || importTargets.length === 0) return;
-    setImporting(true); setImportProgress(0);
-    let success = 0, fail = 0;
-    for (let i = 0; i < importTargets.length; i++) {
-      const c = importTargets[i];
-      const record = {
-        contract_no: c.contract_no,
-        contract_name: c.contract_name,
-        party_b: c.party_b,
-        amount: c.amount,
-        status: c.status,
-        sign_date: c.sign_date,
-        end_date: c.end_date,
-        notes: c.notes,
-        milestones: c.milestones,
-        total_receivable: c.total_receivable,
-        total_received: c.total_received,
-        total_invoiced: c.total_invoiced
-      };
-      try {
-        const { error } = await supabase.from('contracts').insert([record]);
-        if (error) { fail++; } else { success++; }
-      } catch { fail++; }
-      setImportProgress(i + 1);
-    }
-    setImportTargets(null); setImporting(false);
-    addToast(`导入完成：成功 ${success} 条${fail > 0 ? `，跳过/失败 ${fail} 条` : ''}`, fail > 0 && success === 0 ? 'error' : 'success');
-  };
-
-  if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
-
-  return (
-    <>
-      <div className="toast-container">
-        {toasts.map(t => <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />)}
-      </div>
-
-      {/* Header */}
-      <div className="header">
-        <div>
-          <h1>合同管理系统</h1>
-          <span>多人在线实时协作 · Supabase 驱动</span>
-        </div>
-        <div className={`realtime-badge ${realtimeStatus}`}>
-          <span className="realtime-dot"></span>
-          {realtimeStatus === 'connected' ? '实时连接' : '连接断开'}
-        </div>
-      </div>
-
-      <div className="container">
-        {/* Stats */}
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="label">合同总数</div>
-            <div className="value">{stats.total}</div>
-            <div className="sub">份合同</div>
-          </div>
-          <div className="stat-card">
-            <div className="label">合同总金额</div>
-            <div className="value" style={{ color: '#1677ff' }}>{fmtAmount(stats.totalAmount)}</div>
-            <div className="sub">万元</div>
-          </div>
-          <div className="stat-card">
-            <div className="label">进行中合同</div>
-            <div className="value" style={{ color: '#52c41a' }}>{stats.activeCount}</div>
-            <div className="sub">份进行中</div>
-          </div>
-          <div className="stat-card">
-            <div className="label">应付合计 / 到账合计</div>
-            <div className="value" style={{ color: '#1677ff', fontSize: 20 }}>
-              {fmtAmount(stats.totalReceivable)} / {fmtAmount(stats.totalReceived)}
-            </div>
-            <div className="sub">到账 {(stats.totalReceivable > 0 ? (stats.totalReceived / stats.totalReceivable * 100).toFixed(1) : 0)}%</div>
-          </div>
-        </div>
-
-        {/* Toolbar */}
-        <div className="toolbar">
-          <input className="search-box" placeholder="搜索合同名称、编号、对方单位..." value={search} onChange={e => setSearch(e.target.value)} />
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="">全部状态</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <button className="btn btn-primary" onClick={() => { setEditingContract(null); setShowModal(true); }}>+ 添加合同</button>
-          <button className="btn btn-success" onClick={() => fileInputRef.current?.click()}>导入CSV</button>
-          <button className="btn btn-danger" onClick={() => setClearStep(1)} disabled={contracts.length === 0}>清除所有</button>
-          <button className="btn btn-outline" onClick={exportCSV}>导出CSV</button>
-          <input ref={fileInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFileSelect} />
-        </div>
-
-        {/* Table */}
-        {pagedContracts.length === 0 ? (
-          <div className="table-wrapper">
-            <div className="empty-state">
-              <div className="icon">📋</div>
-              <p>{search || statusFilter ? '没有匹配的合同' : '还没有合同数据，点击"添加合同"开始'}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ width: 36 }}>#</th>
-                  <th onClick={() => handleSort('contract_name')}>合同名称{sortIcon('contract_name')}</th>
-                  <th onClick={() => handleSort('contract_no')} style={{ width: 60 }}>序号{sortIcon('contract_no')}</th>
-                  <th onClick={() => handleSort('party_b')} style={{ width: 130 }}>对方单位{sortIcon('party_b')}</th>
-                  <th onClick={() => handleSort('amount')} style={{ width: 100, textAlign: 'right' }}>金额(万元){sortIcon('amount')}</th>
-                  <th onClick={() => handleSort('total_receivable')} style={{ width: 90, textAlign: 'right' }}>应付{sortIcon('total_receivable')}</th>
-                  <th onClick={() => handleSort('total_received')} style={{ width: 90, textAlign: 'right' }}>到账{sortIcon('total_received')}</th>
-                  <th onClick={() => handleSort('total_invoiced')} style={{ width: 90, textAlign: 'right' }}>开票{sortIcon('total_invoiced')}</th>
-                  <th onClick={() => handleSort('sign_date')} style={{ width: 85 }}>签订日期{sortIcon('sign_date')}</th>
-                  <th onClick={() => handleSort('status')} style={{ width: 70 }}>状态{sortIcon('status')}</th>
-                  <th style={{ width: 130 }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedContracts.map((c, idx) => (
-                  <tr key={c.id}>
-                    <td style={{ color: '#999', fontSize: 12 }}>{(page - 1) * pageSize + idx + 1}</td>
-                    <td style={{ fontWeight: 500, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.contract_name}>{c.contract_name}</td>
-                    <td style={{ fontSize: 12 }}>{c.contract_no}</td>
-                    <td style={{ fontSize: 12 }}>{c.party_b || '-'}</td>
-                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.amount) || 0).toFixed(2)}</td>
-                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.total_receivable) || 0).toFixed(2)}</td>
-                    <td className="amount-cell" style={{ fontSize: 12, color: Number(c.total_received) > 0 ? '#52c41a' : '#999' }}>
-                      {(Number(c.total_received) || 0).toFixed(2)}
-                    </td>
-                    <td className="amount-cell" style={{ fontSize: 12 }}>{(Number(c.total_invoiced) || 0).toFixed(2)}</td>
-                    <td style={{ fontSize: 12 }}>{fmtDate(c.sign_date)}</td>
-                    <td><span className={`status-tag ${STATUS_COLORS[c.status] || 'status-active'}`} style={{ fontSize: 11 }}>{c.status}</span></td>
-                    <td>
-                      <div className="action-btns">
-                        <button className="btn btn-sm btn-outline" onClick={() => setDetailTarget(c)}>详情</button>
-                        <button className="btn btn-sm btn-outline" onClick={() => { setEditingContract(c); setShowModal(true); }}>编辑</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => setDeleteTarget(c)}>删除</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="pagination">
-              <span>共 {filteredContracts.length} 条</span>
-              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</button>
-              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                let pn = totalPages <= 7 ? i + 1 : (page <= 4 ? i + 1 : (page >= totalPages - 3 ? totalPages - 6 + i : page - 3 + i));
-                return <button key={pn} className={page === pn ? 'active-page' : ''} onClick={() => setPage(pn)}>{pn}</button>;
-              })}
-              <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>下一页</button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Detail Modal */}
-      {detailTarget && <ContractDetail contract={detailTarget} onClose={() => setDetailTarget(null)} />}
-
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingContract ? '编辑合同' : '添加合同'}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
-            </div>
-            <ContractForm contract={editingContract} onSubmit={handleSubmit} onCancel={() => { setShowModal(false); setEditingContract(null); }} loading={saving} />
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      {deleteTarget && (
-        <ConfirmDialog
-          title="确认删除" loading={deleting}
-          message={`确定删除"${deleteTarget.contract_name}"（序号: ${deleteTarget.contract_no}）？不可恢复。`}
-          onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
-      )}
-
-      {/* Clear All - Step 1 */}
-      {clearStep === 1 && (
-        <div className="confirm-overlay" onClick={() => { setClearStep(0); setClearConfirmText(''); }}>
-          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-            <h3 style={{ color: '#ff4d4f' }}>⚠️ 清除所有合同</h3>
-            <p>确定要清除全部 <strong>{contracts.length}</strong> 份合同吗？此操作<b style={{ color: '#ff4d4f' }}>不可恢复</b>。</p>
-            <div className="btns">
-              <button className="btn btn-outline" onClick={() => { setClearStep(0); setClearConfirmText(''); }}>取消</button>
-              <button className="btn btn-danger" onClick={() => setClearStep(2)}>下一步</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Clear All - Step 2 */}
-      {clearStep === 2 && (
-        <div className="confirm-overlay" onClick={() => { if (!clearing) { setClearStep(0); setClearConfirmText(''); } }}>
-          <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
-            <h3 style={{ color: '#ff4d4f' }}>⚠️ 二次确认</h3>
-            <p style={{ marginBottom: 12 }}>
-              请输入 <b style={{ color: '#ff4d4f', fontSize: 18 }}>YES</b> 确认清除全部 <strong>{contracts.length}</strong> 份合同
-            </p>
-            <input
-              value={clearConfirmText}
-              onChange={e => setClearConfirmText(e.target.value)}
-              placeholder="请输入 YES"
-              style={{
-                width: '100%', padding: '10px 14px', fontSize: 18, textAlign: 'center',
-                border: '2px solid #ff4d4f', borderRadius: 6, outline: 'none',
-                marginBottom: 16, fontWeight: 'bold', letterSpacing: 4
-              }}
-              disabled={clearing}
-              autoFocus
-            />
-            <div className="btns">
-              <button className="btn btn-outline" onClick={() => { setClearStep(0); setClearConfirmText(''); }} disabled={clearing}>取消</button>
-              <button className="btn btn-danger" onClick={handleClearAll} disabled={clearConfirmText !== 'YES' || clearing}>
-                {clearing ? '清除中...' : `确认清除全部 ${contracts.length} 份合同`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Import Preview */}
-      {importTargets && (
-        <div className="modal-overlay" onClick={() => { if (!importing) setImportTargets(null); }}>
-          <div className="modal modal-wide" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>导入预览</h2>
-              <button className="modal-close" onClick={() => { if (!importing) setImportTargets(null); }}>&times;</button>
-            </div>
-            <div className="modal-body" style={{ maxHeight: '55vh', overflowY: 'auto', padding: '12px 20px' }}>
-              <p style={{ marginBottom: 12, fontSize: 13, color: '#666' }}>
-                将从CSV导入 <strong>{importTargets.length}</strong> 份合同（已按合同序号去重，每个合同的节点已合并）
-              </p>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ background: '#fafafa' }}>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>序号</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>合同名称</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>对方单位</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>金额(万)</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>应付(万)</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>到账(万)</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'right' }}>开票(万)</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>节点数</th>
-                    <th style={{ padding: '5px 8px', borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}>状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {importTargets.map(c => (
-                    <tr key={c.contract_no}>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.contract_no}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.contract_name}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}>{c.party_b}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.amount.toFixed(2)}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_receivable.toFixed(2)}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_received.toFixed(2)}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>{c.total_invoiced.toFixed(2)}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>{c.milestones.length}</td>
-                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #f0f0f0' }}><span className={`status-tag ${STATUS_COLORS[c.status]}`} style={{ fontSize: 11 }}>{c.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setImportTargets(null)} disabled={importing}>取消</button>
-              <button className="btn btn-success" onClick={handleImportConfirm} disabled={importing}>
-                {importing ? `正在导入 (${importProgress}/${importTargets.length})...` : `确认导入 ${importTargets.length} 份合同`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  });
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+// ==================== ADD ====================
+function addNewContract() {
+  const maxId = contracts.length > 0 ? Math.max(...contracts.map(c => c.id)) : 0;
+  const newId = maxId + 1;
+  const c = recalcContract({
+    id: newId,
+    name: '新合同',
+    company: '',
+    totalAmount: 0,
+    status: '执行中',
+    startDate: '',
+    endDate: '',
+    notes: '',
+    nodes: [{ name: '节点1', date: '', amount: 0, received: 0, invoiced: 0, overdue: 0, remark: '' }]
+  });
+  contracts.push(c);
+  openDetail(newId);
+  showToast('已创建新合同，填写后点击保存', 'success');
+}
+
+// ==================== CLEAR ====================
+function confirmClear() {
+  if (!contracts.length) { showToast('暂无数据可清空', 'info'); return; }
+  showConfirm('⚠️ 二次确认', `确定要清空全部 ${contracts.length} 份合同吗？此操作不可恢复！`, async () => {
+    showConfirm('⚠️ 再次确认', `请输入 YES 确认清空全部 ${contracts.length} 份合同`, async () => {
+      try {
+        await replaceAllContracts([]);
+        contracts = [];
+        reloadAll();
+        showToast('所有合同已清空', 'success');
+      } catch (err) {
+        showToast('清空失败: ' + err.message, 'error');
+      }
+    });
+  });
+}
+
+// ==================== IMPORT ====================
+document.getElementById('import-file').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const rows = parseCSV(ev.target.result);
+      if (!rows.length) { showToast('CSV文件为空或格式不正确', 'error'); return; }
+      const imported = buildContracts(rows);
+      if (!imported.length) { showToast('未能解析出有效合同数据', 'error'); return; }
+      showConfirm('导入确认', `将从CSV导入 ${imported.length} 份合同（含全部节点），是否覆盖当前数据？`, async () => {
+        try {
+          await replaceAllContracts(imported);
+          contracts = imported;
+          reloadAll();
+          showToast(`成功导入 ${imported.length} 份合同`, 'success');
+        } catch (err) {
+          showToast('导入失败: ' + err.message, 'error');
+        }
+      });
+    } catch(err) { showToast('导入失败: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+// ==================== EXPORT ====================
+function exportCSV(mode) {
+  if (!contracts.length) { showToast('暂无数据可导出', 'info'); return; }
+  let data = mode === 'overdue' ? contracts.filter(c => c.totalOverdue > 0) : contracts;
+  let rows = [];
+  data.forEach(c => {
+    c.nodes.forEach(n => {
+      rows.push([c.id, c.name, c.company, c.totalAmount, c.status, c.startDate, c.endDate, n.name, n.date, n.amount, n.received, n.invoiced, n.remark||'']);
+    });
+  });
+  const headers = '合同序号,合同名称,对方单位,合同总额,合同状态,合同起始,合同截止,节点,节点日期,应付金额,实际到账,开票金额,备注';
+  const csvContent = '\uFEFF' + headers + '\n' + rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const ts = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
+  a.download = mode === 'overdue' ? `逾期合同清单_${ts}.csv` : `合同数据_${ts}.csv`;
+  a.click(); URL.revokeObjectURL(blob);
+  showToast(`已导出${mode==='overdue'?'逾期清单':'全部合同数据'}`, 'success');
+}
+
+// ==================== INIT ====================
+function init() {
+  document.getElementById('today-display').textContent =
+    TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
+  setupRealtime();
+  loadContracts();
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchPage(item.dataset.page));
+});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter;
+    loadContractList();
+  });
+});
+document.getElementById('search-input').addEventListener('input', function() {
+  currentSearch = this.value;
+  loadContractList();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+init();
 </script>
 </body>
 </html>
