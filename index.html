@@ -591,6 +591,80 @@ function saveData() {
       });
   } catch(e) { console.warn(e); }
 }
+  // 确保 saveData 结束后，紧接着有这个函数
+function filterAndRender() {
+    const list = document.getElementById('contractList');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    let filtered = contracts;
+
+    // 1. 搜索过滤
+    if (searchInput.value) {
+        filtered = filtered.filter(c => 
+            c.name.includes(searchInput.value) || 
+            c.customer.includes(searchInput.value) ||
+            c.projectName.includes(searchInput.value)
+        );
+    }
+
+    // 2. 状态过滤
+    if (statusFilter.value !== 'all') {
+        filtered = filtered.filter(c => c.status === statusFilter.value);
+    }
+
+    // 3. 排序：未开始的排最前，其他按开始时间倒序
+    filtered.sort((a, b) => {
+        if (a.status === 'notStarted' && b.status !== 'notStarted') return -1;
+        if (a.status !== 'notStarted' && b.status === 'notStarted') return 1;
+        return new Date(b.startDate) - new Date(a.startDate);
+    });
+
+    // 4. 渲染 HTML
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i>暂无合同数据</div>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(c => `
+        <div class="card" data-id="${c.id}">
+            <div class="card-header">
+                <h3>${c.name}</h3>
+                <span class="status-badge ${c.status}">${getStatusText(c.status)}</span>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span><i class="fas fa-building"></i> 客户：${c.customer}</span>
+                    <span><i class="fas fa-project-diagram"></i> 项目：${c.projectName}</span>
+                </div>
+                <div class="info-row">
+                    <span><i class="fas fa-money-bill-wave"></i> 金额：${formatMoney(c.totalAmount)}</span>
+                    <span><i class="fas fa-percentage"></i> 进度：${c.progress}%</span>
+                </div>
+                <div class="dates">
+                    <span><i class="fas fa-calendar-alt"></i> 起止：${c.startDate} ~ ${c.endDate}</span>
+                </div>
+                <!-- 节点进度条 -->
+                <div class="node-progress">
+                    ${c.nodes.map(n => `
+                        <div class="node-item" title="${n.name}: ${n.invoiced}/${n.amount}">
+                            <div class="node-label">${n.name}</div>
+                            <div class="node-bar-bg">
+                                <div class="node-bar-fill" style="width: ${n.amount ? (n.invoiced/n.amount)*100 : 0}%"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-sm btn-primary" onclick="editContract('${c.id}')"><i class="fas fa-edit"></i> 编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteContract('${c.id}')"><i class="fas fa-trash"></i> 删除</button>
+            </div>
+        </div>
+    `).join('');
+    
+    updateDashboard(); // 更新顶部统计
+}
 async function loadData() {
   // 1) 先试云端
   try {
@@ -620,6 +694,10 @@ async function loadData() {
 
   contracts = [];
   filterAndRender();
+  if (!error && data && Array.isArray(data.data)) {
+        contracts = (data.data || []).map(c => recalcContract(c));
+        filterAndRender(); // <--- 确保这里有这一行
+        return;
 }
 // ==================== INIT ====================
 let currentFilter = 'all';
