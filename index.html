@@ -312,7 +312,6 @@ const SUPABASE_URL = 'https://yxvcutlwxwhvhinnjjoj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmN1dGx3eHdodmhpbm5qam9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA5ODYsImV4cCI6MjA5NjU1Njk4Nn0.6DArPpTIUZbGRhuOHRJjloWJRMdmsh2h9i3VIvMVBn8';
 
 const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const APP_DATA_ID = 'contracts';
 /* =========================== */
 let contracts = [];
 const TODAY = new Date();
@@ -1207,7 +1206,6 @@ document.getElementById('search-input').addEventListener('input', function() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeDetail();
 });
-}
 </script>
 </body>
 </html>
