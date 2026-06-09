@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合同管理系统</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background:#f0f2f5; color:#333; min-height:100vh; }
+.sidebar { position:fixed; left:0; top:0; bottom:0; width:220px; background:#1a2332; color:#fff; z-index:100; display:flex; flex-direction:column; }
+.sidebar-logo { padding:24px 20px; font-size:18px; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; }
+.sidebar-logo .icon { width:36px; height:36px; background:linear-gradient(135deg,#4e7cff,#36cfc9); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.sidebar-nav { flex:1; padding:12px 0; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; color:rgba(255,255,255,0.65); transition:0.2s; font-size:14px; border-left:3px solid transparent; }
+.nav-item:hover { background:rgba(255,255,255,0.05); color:#fff; }
+.nav-item.active { background:rgba(78,124,255,0.15); color:#4e7cff; border-left-color:#4e7cff; }
+.nav-item .badge { margin-left:auto; background:#e74c3c; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; }
+.main { margin-left:220px; padding:0; min-height:100vh; }
+.header { background:#fff; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e8e8e8; position:sticky; top:0; z-index:50; }
+.header h1 { font-size:20px; font-weight:600; }
+.header-right { display:flex; align-items:center; gap:16px; font-size:13px; color:#888; }
+.content { padding:24px 28px; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:#fff; border-radius:10px; padding:20px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.06); display:flex; align-items:center; gap:16px; transition:0.2s; }
+.stat-card:hover { box-shadow:0 4px 12px rgba(0,0,0,0.1); transform:translateY(-2px); }
+.stat-icon { width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.stat-icon.blue { background:#e6f0ff; color:#4e7cff; }
+.stat-icon.green { background:#e6fff0; color:#36cf67; }
+.stat-icon.orange { background:#fff7e6; color:#fa8c16; }
+.stat-icon.red { background:#ffeaea; color:#e74c3c; }
+.stat-info { flex:1; }
+.stat-label { font-size:13px; color:#888; margin-bottom:4px; }
+.stat-value { font-size:24px; font-weight:700; }
+.stat-sub { font-size:12px; color:#aaa; margin-top:2px; }
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.chart-box { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.chart-box h3 { font-size:15px; font-weight:600; margin-bottom:12px; color:#444; }
+.chart-wrap { position:relative; width:100%; height:250px; }
+.table-box { background:#fff; border-radius:10px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; }
+.toolbar-right { display:flex; align-items:center; gap:8px; }
+.search-input { padding:8px 14px; border:1px solid #ddd; border-radius:6px; font-size:13px; width:220px; outline:none; transition:0.2s; }
+.search-input:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.filter-btn { padding:7px 16px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer; font-size:13px; transition:0.2s; color:#555; white-space:nowrap; }
+.filter-btn:hover { border-color:#4e7cff; color:#4e7cff; }
+.filter-btn.active { background:#4e7cff; color:#fff; border-color:#4e7cff; }
+.action-btn { padding:7px 14px; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-size:13px; transition:0.2s; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.action-btn.primary { background:#4e7cff; color:#fff; border-color:#4e7cff; }
+.action-btn.primary:hover { background:#3a6aff; }
+.action-btn.success { background:#13c2c2; color:#fff; border-color:#13c2c2; }
+.action-btn.success:hover { background:#0fadad; }
+.action-btn.danger { color:#e74c3c; border-color:#e74c3c; }
+.action-btn.danger:hover { background:#e74c3c; color:#fff; }
+.action-btn:hover { box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#f7f8fa; padding:12px 14px; text-align:left; font-weight:600; color:#555; border-bottom:2px solid #e8e8e8; white-space:nowrap; }
+td { padding:12px 14px; border-bottom:1px solid #f0f0f0; }
+tr:hover { background:#f9fafb; }
+tr.clickable { cursor:pointer; }
+.amount { font-weight:600; font-variant-numeric:tabular-nums; font-family:"SF Mono","Consolas","Menlo",monospace; text-align:right; }
+.status-tag { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:500; }
+.status-tag.active { background:#e6fff0; color:#13c2c2; }
+.status-tag.done { background:#f0f0f0; color:#888; }
+
+/* Detail editable */
+.detail-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); z-index:200; justify-content:center; align-items:center; }
+.detail-overlay.show { display:flex; }
+.detail-panel { background:#fff; border-radius:12px; width:960px; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.detail-header { padding:18px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:10; border-radius:12px 12px 0 0; }
+.detail-header h2 { font-size:17px; font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.detail-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.close-btn { width:32px; height:32px; border-radius:50%; border:none; background:#f0f0f0; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+.close-btn:hover { background:#e0e0e0; }
+.detail-body { padding:24px; }
+
+.editable-field { display:flex; flex-direction:column; gap:4px; }
+.editable-field .label { font-size:12px; color:#999; }
+.editable-field input, .editable-field select { padding:6px 10px; border:1px solid #e0e0e0; border-radius:6px; font-size:14px; font-weight:500; outline:none; transition:0.2s; background:#fff; }
+.editable-field input:focus, .editable-field select:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.editable-field input.input-error { border-color:#e74c3c; }
+.detail-info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+
+.progress-section { margin-top:20px; }
+.progress-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.progress-header h4 { font-size:14px; color:#555; }
+.progress-bar-bg { height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden; margin-bottom:20px; }
+.progress-bar-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+.progress-bar-fill.blue { background:linear-gradient(90deg,#4e7cff,#36cfc9); }
+
+.node-table-wrap { overflow-x:auto; margin-top:16px; }
+.node-table { width:100%; font-size:13px; min-width:800px; }
+.node-table th { background:#fafafa; white-space:nowrap; }
+.node-table td { padding:8px 10px; vertical-align:middle; }
+.node-table input, .node-table select { padding:4px 8px; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; width:100%; outline:none; background:#fff; transition:0.2s; min-width:60px; }
+.node-table input:focus, .node-table select:focus { border-color:#4e7cff; box-shadow:0 0 0 2px rgba(78,124,255,0.1); }
+.node-table .overdue-auto { color:#e74c3c; font-weight:600; text-align:center; padding:4px 8px; background:#fafafa; border-radius:4px; display:inline-block; min-width:60px; font-size:13px; }
+.node-row-overdue { background:#fff2f0; }
+.node-add-btn { margin-top:8px; padding:6px 16px; border:1px dashed #ccc; border-radius:6px; background:#fafafa; cursor:pointer; font-size:13px; color:#888; transition:0.2s; }
+.node-add-btn:hover { border-color:#4e7cff; color:#4e7cff; background:#f0f5ff; }
+
+.alert-row { background:#fffbe6; }
+.page { display:none; }
+.page.active { display:block; }
+.toast { position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:999; padding:12px 24px; border-radius:8px; font-size:14px; color:#fff; opacity:0; transition:opacity 0.3s; pointer-events:none; }
+.toast.show { opacity:1; }
+.toast.success { background:#13c2c2; }
+.toast.error { background:#e74c3c; }
+.toast.info { background:#4e7cff; }
+.confirm-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:300; justify-content:center; align-items:center; }
+.confirm-overlay.show { display:flex; }
+.confirm-box { background:#fff; border-radius:10px; padding:28px; width:380px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+.confirm-box h3 { font-size:16px; margin-bottom:8px; }
+.confirm-box p { font-size:14px; color:#666; margin-bottom:20px; line-height:1.5; }
+.confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
+.confirm-actions button { padding:8px 20px; border-radius:6px; border:1px solid #ddd; cursor:pointer; font-size:13px; }
+.confirm-actions .btn-cancel { background:#f5f5f5; }
+.confirm-actions .btn-danger { background:#e74c3c; color:#fff; border-color:#e74c3c; }
+.empty-state { text-align:center; padding:60px 20px; color:#bbb; }
+.empty-state .icon { font-size:48px; margin-bottom:12px; }
+.empty-state p { font-size:14px; }
+.file-input-hidden { display:none; }
+@media (max-width:1024px) {
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .charts-row { grid-template-columns:1fr; }
+  .sidebar { width:64px; }
+  .sidebar-logo span, .nav-item span:not(.badge) { display:none; }
+  .nav-item { justify-content:center; padding:12px; }
+  .main { margin-left:64px; }
+  .detail-panel { width:95%; }
+  .detail-info-grid { grid-template-columns:repeat(2,1fr); }
+  .toolbar-right { width:100%; justify-content:flex-start; }
+}
+@media (max-width:640px) {
+  .stats-grid { grid-template-columns:1fr; }
+  .detail-info-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">📋</div>
+    <span>合同管理</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard">
+      <span>📊</span><span>工作台</span>
+    </div>
+    <div class="nav-item" data-page="list">
+      <span>📑</span><span>合同列表</span>
+      <span class="badge" id="active-badge">0</span>
+    </div>
+    <div class="nav-item" data-page="overdue">
+      <span>⚠️</span><span>逾期预警</span>
+      <span class="badge" id="overdue-badge">0</span>
+    </div>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="header">
+    <h1 id="page-title">📊 工作台</h1>
+    <div class="header-right">
+      <span>📅 今日：<span id="today-display">--</span></span>
+      <span>共 <strong id="total-count">0</strong> 份合同</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-info">
+            <div class="stat-label">合同总数</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-sub">执行中 <span id="stat-active">0</span> 份</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <div class="stat-label">合同总金额</div>
+            <div class="stat-value" id="stat-amount">¥0</div>
+            <div class="stat-sub">已完成 <span id="stat-done-amount">¥0</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">已到账金额</div>
+            <div class="stat-value" id="stat-received">¥0</div>
+            <div class="stat-sub">到账率 <span id="stat-rate">0%</span></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">⏳</div>
+          <div class="stat-info">
+            <div class="stat-label">逾期未开票</div>
+            <div class="stat-value" id="stat-overdue">¥0</div>
+            <div class="stat-sub">有逾期合同 <span id="stat-overdue-count">0</span> 份</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-box">
+          <h3>📈 合同状态分布</h3>
+          <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>📊 月度到账趋势</h3>
+          <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3>🔝 合同金额 TOP 10</h3>
+        </div>
+        <table>
+          <thead><tr><th>序号</th><th>合同名称</th><th>对方单位</th><th style="text-align:right">合同总额(万元)</th><th style="text-align:right">已到账(万元)</th><th>状态</th><th>进度</th></tr></thead>
+          <tbody id="top10-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-list">
+      <div class="table-box">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input class="search-input" id="search-input" placeholder="🔍 搜索合同名称或对方单位...">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="执行中">执行中</button>
+            <button class="filter-btn" data-filter="已完成">已完成</button>
+            <button class="filter-btn" data-filter="overdue">有逾期</button>
+          </div>
+          <div class="toolbar-right">
+            <input type="file" id="import-file" class="file-input-hidden" accept=".csv">
+            <button class="action-btn primary" onclick="addNewContract()">📄 添加合同</button>
+            <button class="action-btn" onclick="document.getElementById('import-file').click()">📥 导入CSV</button>
+            <button class="action-btn primary" onclick="exportCSV()">📤 导出CSV</button>
+            <button class="action-btn danger" onclick="confirmClear()">🗑️ 清空数据</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>序号</th><th>合同名称</th><th>对方单位</th>
+              <th style="text-align:right">总额(万元)</th><th style="text-align:right">已到账</th>
+              <th style="text-align:right">逾期未开票</th><th>状态</th><th>合同期限</th>
+            </tr>
+          </thead>
+          <tbody id="contract-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-overdue">
+      <div class="table-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 style="color:#e74c3c;">⚠️ 逾期未开票合同清单</h3>
+          <button class="action-btn primary" onclick="exportCSV('overdue')">📤 导出逾期清单</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>序号</th><th>合同名称</th><th>对方单位</th><th style="text-align:right">逾期未开票(万元)</th><th>到期节点数</th><th>状态</th></tr>
+          </thead>
+          <tbody id="overdue-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal (Editable) -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel">
+    <div class="detail-header">
+      <h2 id="detail-title">合同详情</h2>
+      <div class="detail-actions">
+        <button class="action-btn success" id="detail-save-btn" onclick="saveContractEdit()">💾 保存</button>
+        <button class="action-btn danger" onclick="confirmDeleteContract()" style="padding:5px 12px;font-size:12px;">🗑️ 删除</button>
+        <button class="close-btn" onclick="closeDetail()">✕</button>
+      </div>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)hideConfirm()">
+  <div class="confirm-box">
+    <h3 id="confirm-title">确认操作</h3>
+    <p id="confirm-message">确定要执行此操作吗？</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="hideConfirm()">取消</button>
+      <button class="btn-danger" id="confirm-btn" onclick="hideConfirm()">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== DATA ====================
+let contracts = [];
+const TODAY = new Date();
+const TODAY_DATE = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+
+const SEED_DATA = `合同序号,合同名称,对方单位,合同总额,合同状态,合同起始,合同截止,节点,节点日期,应付金额,实际到账,开票金额,逾期未开票,备注
+1,某大流量增压风扇气动设计技术开发,贵州永红,26,执行中,2024/5/13,2024/12/31,节点1,2024/8/20,7.8,7.8,7.8,18.2,
+1,某大流量增压风扇气动设计技术开发,贵州永红,26,执行中,2024/5/13,2024/12/31,节点2,2024/12/31,13,0,0,18.2,
+1,某大流量增压风扇气动设计技术开发,贵州永红,26,执行中,2024/5/13,2024/12/31,节点3,2024/12/31,5.2,0,0,18.2,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点1,2024/9/30,7.5,5,5,527.5,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点2,2024/12/31,150,0,0,527.5,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点3,2025/7/1,150,0,0,527.5,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点4,2026/1/1,225,0,0,527.5,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点5,2026/7/1,150,0,0,527.5,
+2,面向工业装配场景的轮腿式人形机器人设计及感知控制系统研发(算法开发),博思特,750,执行中,2024/8/1,2027/12/30,节点6,2027/12/30,67.5,0,0,527.5,
+3,面向下一代AVS视频标准关键技术研发,海信集团有限公司,50,执行中,2024/7/1,2025/6/30,节点1,2024/7/30,15,15,15,15,
+3,面向下一代AVS视频标准关键技术研发,海信集团有限公司,50,执行中,2024/7/1,2025/6/30,节点2,2025/1/30,20,20,20,15,
+3,面向下一代AVS视频标准关键技术研发,海信集团有限公司,50,执行中,2024/7/1,2025/6/30,节点3,2025/6/30,15,0,0,15,
+4,高端镍合金焊丝产品合作研发,中达科技浙江,80,执行中,,,节点1,2024/11/30,10,10,10,0,第二节点待定
+4,高端镍合金焊丝产品合作研发,中达科技浙江,80,执行中,,,节点2,2099/11/30,70,0,0,0,第二节点待定
+5,电磁脉冲连接工装研制,安徽利扬检测科技有限公司,10,已完成,2024/10/30,2026/10/30,节点1,2024/11/6,10,10,10,0,
+6,调频连续光测距传感器,科瑞工业自动化系统(苏州)有限公司,200,已完成,2024/11/1,2025/11/1,节点1,2025/1/13,50,50,50,0,
+6,调频连续光测距传感器,科瑞工业自动化系统(苏州)有限公司,200,已完成,2024/11/1,2025/11/1,节点2,2025/3/1,50,50,50,0,
+6,调频连续光测距传感器,科瑞工业自动化系统(苏州)有限公司,200,已完成,2024/11/1,2025/11/1,节点3,2025/8/1,50,50,50,0,
+6,调频连续光测距传感器,科瑞工业自动化系统(苏州)有限公司,200,已完成,2024/11/1,2025/11/1,节点4,2025/12/30,50,50,50,0,
+7,高温耐氟环境高熵合金材料激光熔覆工艺研究,海南沧博科技有限公司,42,执行中,2024/11/1,2025/4/30,节点1,2024/12/7,7,7,7,28,
+7,高温耐氟环境高熵合金材料激光熔覆工艺研究,海南沧博科技有限公司,42,执行中,2024/11/1,2025/4/30,节点2,2024/12/31,7,7,7,28,
+7,高温耐氟环境高熵合金材料激光熔覆工艺研究,海南沧博科技有限公司,42,执行中,2024/11/1,2025/4/30,节点3,2025/1/7,14,0,0,28,
+7,高温耐氟环境高熵合金材料激光熔覆工艺研究,海南沧博科技有限公司,42,执行中,2024/11/1,2025/4/30,节点4,2025/4/30,14,0,0,28,
+8,镍钴锰酸锂材料销售,淄博火炬能源有限责任公司,13,已完成,2024/12/21,2025/12/21,节点1,2024/12/31,13,13,13,0,
+9,具身智能机器人,深圳市莱达四维信息科技有限公司,1.92,已完成,2024/11/12,2025/5/11,节点1,2024/12/31,1.92,1.92,1.92,0,
+10,针对深度学习的乳腺超声辅助诊断,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点1,2025/1/14,7.21,7.21,7.21,2.06,
+10,针对深度学习的乳腺超声辅助诊断,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点2,2026/1/1,2.06,0,0,2.06,
+10,针对深度学习的乳腺超声辅助诊断,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点3,2026/12/31,1.03,0,0,2.06,
+11,医学大模型可信回复生成关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点1,2025/1/14,7.21,7.21,7.21,2.06,
+11,医学大模型可信回复生成关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点2,2026/1/1,2.06,0,0,2.06,
+11,医学大模型可信回复生成关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点3,2026/12/31,1.03,0,0,2.06,
+12,医学大模型诊疗语义理解与指令遵循关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点1,2025/1/14,7.21,7.21,7.21,2.06,
+12,医学大模型诊疗语义理解与指令遵循关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点2,2026/1/1,2.06,0,0,2.06,
+12,医学大模型诊疗语义理解与指令遵循关键技术研究,江苏盖睿健康科技有限公司,10.3,执行中,2024/12/31,2026/12/31,节点3,2026/12/31,1.03,0,0,2.06,
+13,SMT外观缺陷小样本学习及异常检测,艾聚达信息技术(苏州)有限公司,8,执行中,2024/12/30,2025/6/30,节点1,2025/2/20,3,3,3,5,
+13,SMT外观缺陷小样本学习及异常检测,艾聚达信息技术(苏州)有限公司,8,执行中,2024/12/30,2025/6/30,节点2,2025/5/10,2.5,0,0,5,
+13,SMT外观缺陷小样本学习及异常检测,艾聚达信息技术(苏州)有限公司,8,执行中,2024/12/30,2025/6/30,节点3,2025/7/10,2.5,0,0,5,
+14,具身智能大模型关键技术研发,追觅创新科技(苏州)有限公司,60,执行中,2025/1/10,2029/1/9,节点1,2025/2/14,30,30,30,0,
+14,具身智能大模型关键技术研发,追觅创新科技(苏州)有限公司,60,执行中,2025/1/10,2029/1/9,节点2,2026/11/30,18,0,0,0,
+14,具身智能大模型关键技术研发,追觅创新科技(苏州)有限公司,60,执行中,2025/1/10,2029/1/9,节点3,2028/1/31,12,0,0,0,
+15,气体分析检测平台研制,深圳市金旅宏科技有限公司,429.613106,已完成,,,节点1,2026/1/22,429.61,429.61,429.61,0,
+16,具身智能机器人训练场平台开发项目,苏州智能机器人科技发展有限公司,3761.570548,执行中,2025/4/30,2025/10/31,节点1,2025/10/31,3600.61,3600.61,3600.61,0,
+17,高温热管辐射器钎焊试制,上海卫星装备研究所,25,已完成,2025/4/1,2025/5/31,节点1,2025/5/31,25,25,25,0,
+18,子母式多维信息获取与多视角交互融合模组,上海航天控制技术研究所,,执行中,2025/5/30,2026/5/30,节点1,2025/12/15,27,27,27,3,
+18,子母式多维信息获取与多视角交互融合模组,上海航天控制技术研究所,,执行中,2025/5/30,2026/5/30,节点2,2026/5/31,3,0,0,3,
+19,电磁发射的脉冲放电装置研制,武汉理工大学,,执行中,2025/5/27,2026/4/26,节点1,2025/7/1,36,36,36,9,
+19,电磁发射的脉冲放电装置研制,武汉理工大学,,执行中,2025/5/27,2026/4/26,节点2,2025/10/28,45,45,45,9,
+19,电磁发射的脉冲放电装置研制,武汉理工大学,,执行中,2025/5/27,2026/4/26,节点3,2026/5/3,9,0,0,9,
+20,高温透平叶片温度智能感知皮肤系统采购,东方汽轮机,87.3,执行中,2025/3/18,2026/3/30,节点1,2026/3/30,87.3,0,0,87.3,
+21,高温高压气浮轴承试验台耐压舱设计加工,大连理工大学,35,已完成,2025/4/26,2025/6/30,节点1,2025/9/30,35,35,35,0,
+22,飞轮姿控系统,中国科学院西安光学精密机械研究所,90,已完成,2025/6/1,2025/12/31,节点1,2025/12/31,90,90,90,0,
+23,人形机器人智能语音交互、语义识别与动作联动控制,烟台比吉流体控制技术有限公司,30,执行中,2025/6/1,2026/5/31,节点1,2025/6/7,9,9,9,0,
+23,人形机器人智能语音交互、语义识别与动作联动控制,烟台比吉流体控制技术有限公司,30,执行中,2025/6/1,2026/5/31,节点2,2026/6/7,21,0,0,21,
+24,基于多视角协同感知的建筑场景三维建模技术研究,中建云控（苏州）智能技术有限公司,30,执行中,2025/8/1,2026/1/31,节点1,2025/8/31,21,21,21,9,
+24,基于多视角协同感知的建筑场景三维建模技术研究,中建云控（苏州）智能技术有限公司,30,执行中,2025/8/1,2026/1/31,节点2,2026/2/28,9,0,0,9,
+25,PLY4 Communication主板设计,上海猿铁电子有限公司,150,已完成,2025/7/1,2026/12/31,节点1,2025/12/31,150,150,150,0,
+26,汽车轻量化高强高成型不等厚DP630热镀锌材料材料卡片修正及优化,慕贝尔汽车部件(太仓)有限公司,15,执行中,2025/2/19,2028/2/18,节点1,2025/12/31,15,15,15,0,
+27,钛合金电子背散射衍射(EBSD)样品制备服务项目,道格技术(苏州)有限公司,0.39,已完成,2025/8/1,2026/8/1,节点1,2025/8/1,0.39,0.39,0.39,0,
+28,钛合金电子背散射衍射(EBSD)样品制备服务,博瑞夫新材料研发(苏州)有限公司,0.24,已完成,2025/8/1,2026/8/1,节点1,2026/8/1,0.24,0.24,0.24,0,
+29,钛合金样品前处理制备服务,微旷检测(苏州)有限公司,0.21,已完成,2025/8/1,2026/8/1,节点1,2026/8/1,0.21,0.21,0.21,0,
+30,磁导航手术机器人配准方法开发,山东威高医疗科技有限公司,50,执行中,2025/10/1,2026/9/30,节点1,2026/9/30,20,0,0,0,
+31,主油路子系统研制合同,哈尔滨工业大学,28.8,已完成,2025/9/1,2026/9/1,节点1,2025/9/7,28.8,28.8,28.8,0,
+32,高能量密度锂金属电池超声阵列原位检测技术研究,上海空间电源研究所,70,执行中,2025/12/2,2027/10/30,节点1,2026/1/29,21,21,21,0,中期检查节点未定
+32,高能量密度锂金属电池超声阵列原位检测技术研究,上海空间电源研究所,70,执行中,2025/12/2,2027/10/30,节点2,2027/10/30,28,0,0,0,中期检查节点未定
+32,高能量密度锂金属电池超声阵列原位检测技术研究,上海空间电源研究所,70,执行中,2025/12/2,2027/10/30,节点3,2027/10/30,21,0,0,0,中期检查节点未定
+33,洗选中心动力煤产品智能除杂技术研究导应用技术开发,国家能源集团宁夏煤业有限责任公司洗选中心,89,执行中,2025/11/2,2099/1/1,节点1,2099/1/1,26.7,24.03,24.03,0,节点未定
+33,洗选中心动力煤产品智能除杂技术研究导应用技术开发,国家能源集团宁夏煤业有限责任公司洗选中心,89,执行中,2025/11/2,2099/1/1,节点2,2099/1/2,26.7,0,0,0,节点未定
+33,洗选中心动力煤产品智能除杂技术研究导应用技术开发,国家能源集团宁夏煤业有限责任公司洗选中心,89,执行中,2025/11/2,2099/1/1,节点3,2099/1/3,35.6,0,0,0,节点未定
+33,洗选中心动力煤产品智能除杂技术研究导应用技术开发,国家能源集团宁夏煤业有限责任公司洗选中心,89,执行中,2025/11/2,2099/1/1,节点4,2099/1/4,8.9,0,0,0,节点未定
+34,面向电池应力与分布检测的新型柔性应变传感器技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点1,2025/12/31,24,24,24,0,
+34,面向电池应力与分布检测的新型柔性应变传感器技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点2,2026/10/31,32,0,0,0,
+34,面向电池应力与分布检测的新型柔性应变传感器技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点3,2027/10/31,24,0,0,0,
+35,基于多传感融合的扫地机器人智能路径规划与障碍物避让系统研发,追觅软件信息（苏州）有限公司,10,执行中,2025/8/29,2026/6/30,节点1,2026/6/30,10,10,10,0,
+36,工业燃机纯氢及高氢燃烧技术的实验研究,上海烜原动力科技有限公司,234,执行中,2025/11/15,2026/11/15,节点1,2026/2/25,70.2,70.2,70.2,0,中期节点不定
+36,工业燃机纯氢及高氢燃烧技术的实验研究,上海烜原动力科技有限公司,234,执行中,2025/11/15,2026/11/15,节点2,2026/12/31,70.2,70.2,70.2,0,中期节点不定
+36,工业燃机纯氢及高氢燃烧技术的实验研究,上海烜原动力科技有限公司,234,执行中,2025/11/15,2026/11/15,节点3,2027/1/15,93.6,0,0,0,中期节点不定
+37,扇形可展开柔性太阳电池翼技术,上海空间电源研究所,80,执行中,2025/12/2,2026/12/31,节点1,2026/1/2,24,24,24,0,
+37,扇形可展开柔性太阳电池翼技术,上海空间电源研究所,80,执行中,2025/12/2,2026/12/31,节点2,2026/8/2,32,0,0,0,
+37,扇形可展开柔性太阳电池翼技术,上海空间电源研究所,80,执行中,2025/12/2,2026/12/31,节点3,2027/1/31,24,0,0,0,
+38,微通道液冷实验台建设与能耗优化研究,1.杭州玖聚能源科技有限公司 2.北京极智冷源科技有限公司,10,已完成,2025/11/20,2027/11/20,节点1,2025/11/30,5,5,5,0,
+38,微通道液冷实验台建设与能耗优化研究,1.杭州玖聚能源科技有限公司 2.北京极智冷源科技有限公司,10,已完成,2025/11/20,2027/11/20,节点2,2026/9/15,5,5,5,0,
+39,高压防爆气路管路及气瓶采购,北京航空航天大学,9.6,已完成,2025/11/17,2025/11/24,节点1,2025/11/24,9.6,9.6,9.6,0,
+40,微型光学镜头设计,哈尔滨工业大学,28,已完成,2025/11/11,2025/12/31,节点1,2025/12/31,28,28,28,0,
+41,空间可组装电池阵模块结构与集成技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点1,2026/1/2,24,24,24,0,中期节点未定
+41,空间可组装电池阵模块结构与集成技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点2,2027/9/30,32,0,0,0,中期节点未定
+41,空间可组装电池阵模块结构与集成技术,上海空间电源研究所,80,执行中,2025/12/2,2027/10/31,节点3,2027/10/31,24,0,0,0,中期节点未定
+42,智能皮肤测温系统外协合同,江苏空天测控科技有限公司,110,执行中,2025/11/18,2027/11/18,节点1,2025/11/25,15,15,15,0,中期节点未定
+42,智能皮肤测温系统外协合同,江苏空天测控科技有限公司,110,执行中,2025/11/18,2027/11/18,节点2,2027/11/28,35,0,0,0,中期节点未定
+42,智能皮肤测温系统外协合同,江苏空天测控科技有限公司,110,执行中,2025/11/18,2027/11/18,节点3,2027/11/28,60,0,0,0,中期节点未定
+43,高温热管辐射器钎焊,上海卫星装备研究所,90,执行中,2025/11/28,2026/11/28,节点2,2026/1/28,45,45,45,0,
+43,高温热管辐射器钎焊,上海卫星装备研究所,90,执行中,2025/11/28,2026/11/28,节点3,2026/11/28,45,0,0,0,
+44,激光熔覆轴类零件的寿命评估技术开发,天津辉锐激光科技有限公司,22,执行中,2025/11/30,2026/11/30,节点1,2025/12/7,11,0,0,11,
+44,激光熔覆轴类零件的寿命评估技术开发,天津辉锐激光科技有限公司,22,执行中,2025/11/30,2026/11/30,节点2,2026/11/30,11,0,0,11,
+45,PID沉积 Ca2MgSi2O7镀膜工艺实验,北京大学,,执行中,2025/11/26,2026/11/26,节点1,2099/1/1,0,0,0,0,
+46,汽车轻量化高强不等厚400800MTH材料成形极限各向异性模型植入材料卡,慕贝尔汽车部件(沈阳)有限公司,15,执行中,2025/11/30,2026/11/29,节点2,2025/12/30,10,0,0,15,
+46,汽车轻量化高强不等厚400800MTH材料成形极限各向异性模型植入材料卡,慕贝尔汽车部件(沈阳)有限公司,15,执行中,2025/11/30,2026/11/29,节点1,2026/4/30,5,0,0,15,
+47,面向低温应用的锂离子电池电解液配方优化与性能提升研究,西安瑟福能源科技有限公司,12,执行中,2025/12/9,2026/6/9,节点1,2025/12/31,12,12,12,0,
+48,高功率锂离子电池研发,西安瑟福能源科技有限公司,25,已完成,2025/12/9,2026/6/9,节点2,2025/12/31,25,25,25,0,
+49,汽车轻量化高强不等厚600/900 MTH材料成形极限各向异性模型植入材料卡,慕贝尔汽车部件(沈阳)有限公司,15,执行中,2025/12/30,2026/6/30,节点1,2026/1/31,10,0,0,10,
+49,汽车轻量化高强不等厚600/900 MTH材料成形极限各向异性模型植入材料卡,慕贝尔汽车部件(沈阳)有限公司,15,执行中,2025/12/30,2026/6/30,节点1,2026/7/30,5,0,0,10,
+50,激光光热治疗光纤设计,济南晶鑫光电技术有限公司,10,执行中,2025/12/1,2026/12/31,节点1,2026/1/31,3,3,3,0,
+50,激光光热治疗光纤设计,济南晶鑫光电技术有限公司,10,执行中,2025/12/1,2026/12/31,节点2,2027/1/31,7,0,0,0,
+51,光声多模态系统图像融合方法开发,山东格诠信息科技有限公司,10,执行中,2025/12/1,2026/12/31,节点1,2026/1/31,3,3,3,0,
+51,光声多模态系统图像融合方法开发,山东格诠信息科技有限公司,10,执行中,2025/12/1,2026/12/31,节点2,2027/1/31,7,0,0,0,
+52,超声治疗机测温控温算法开发,特姆威(苏州)医学影像有限公司,15,执行中,2025/12/19,2026/12/31,节点1,2026/1/31,4.5,4.5,4.5,0,
+52,超声治疗机测温控温算法开发,特姆威(苏州)医学影像有限公司,15,执行中,2025/12/19,2026/12/31,节点2,2027/1/31,10.5,0,0,0,
+53,消化道光声内窥成像算法开发,特姆威(苏州)医学影像有限公司,10,执行中,2025/12/19,2026/12/31,节点1,2026/1/31,3,3,3,0,
+53,消化道光声内窥成像算法开发,特姆威(苏州)医学影像有限公司,10,执行中,2025/12/19,2026/12/31,节点2,2027/1/31,7,0,0,0,
+54,激光三角测头光机结构设计,科瑞工业自动化系统（苏州）有限公司,60,执行中,2025/11/20,2026/11/20,节点1,2026/2/20,20,0,0,20,
+54,激光三角测头光机结构设计,科瑞工业自动化系统（苏州）有限公司,60,执行中,2025/11/20,2026/11/20,节点2,2026/8/20,20,0,0,20,
+54,激光三角测头光机结构设计,科瑞工业自动化系统（苏州）有限公司,60,执行中,2025/11/20,2026/11/20,节点1,2026/11/20,20,0,0,20,
+55,激光三角测头电路设计,科瑞工业自动化系统（苏州）有限公司,40,执行中,2025/11/20,2026/11/20,节点2,2026/8/20,20,0,0,0,
+55,激光三角测头电路设计,科瑞工业自动化系统（苏州）有限公司,40,执行中,2025/11/20,2026/11/20,节点3,2026/11/20,20,0,0,0,
+56,钛-铝双金属零膨胀环形焊接结构及工艺研制,保定桐宇祺金属制品有限公司,80,执行中,2025/10/1,2026/10/1,节点1,2025/12/31,30,40,40,-10,
+56,钛-铝双金属零膨胀环形焊接结构及工艺研制,保定桐宇祺金属制品有限公司,80,执行中,2025/10/1,2026/10/1,节点2,2026/10/31,50,0,0,-10,
+57,新型镍基合金粉末选区激光熔化增材制造工艺开发,深圳爱唯欧科技有限公司,60,执行中,2025/11/1,2027/11/1,节点1,2025/12/1,30,30,30,0,
+57,新型镍基合金粉末选区激光熔化增材制造工艺开发,深圳爱唯欧科技有限公司,60,执行中,2025/11/1,2027/11/1,节点2,2027/11/30,30,0,0,0,
+58,电力系统源网荷氢储协同调度技术研究,苏州溯驭技术有限公司,34,已完成,2025/12/25,2026/7/15,节点1,2026/1/10,34,34,34,0,
+59,激光多普勒测振装置,株洲菲斯罗克光电科技股份有限公司,27.9,已完成,2025/12/22,2026/4/30,节点2,2025/4/30,27.9,27.9,27.9,0,
+60,阵列摄像头成像与检测技术研究,擎问科技(山东)有限公司,0.8,已完成,2025/12/1,2026/12/1,节点1,2026/12/1,0.8,0.8,0.8,0,
+61,基于多模态大模型的身心状态监测与干预智能体开发,苏州禾帆智能科技有限公司,20,执行中,2025/12/30,2026/12/31,节点1,2026/1/31,4,4,4,0,
+61,基于多模态大模型的身心状态监测与干预智能体开发,苏州禾帆智能科技有限公司,20,执行中,2025/12/30,2026/12/31,节点1,2027/1/31,16,0,0,0,
+61,基于多模态大模型的身心状态监测与干预智能体开发,苏州禾帆智能科技有限公司,20,执行中,2025/12/30,2026/12/31,节点1,2026/1/31,6,6,6,0,
+61,基于多模态大模型的身心状态监测与干预智能体开发,苏州禾帆智能科技有限公司,20,执行中,2025/12/30,2026/12/31,节点2,2027/1/31,24,0,0,0,
+62,锂离子电池寿命预测模型研发,常德昆宇新能源科技有限公司,20,执行中,2026/1/1,2026/6/24,节点1,2026/2/28,20,0,0,20,
+63,锂离子电池电化学仿真技术研发,常德昆宇新能源科技有限公司,20,执行中,2026/1/1,2026/6/24,节点2,2026/2/28,20,0,0,20,
+64,新型能源消纳体系的分布式离网制氢项目,苏州苏氢制氢设备有限公司,20,执行中,2026/1/1,2031/1/1,节点1,2031/1/1,20,0,0,0,
+65,激光清洗技术与增材修复工艺一体化项目,无锡维时动力技术有限公司,30,执行中,2026/1/1,2031/1/1,节点1,2031/1/1,30,0,0,0,
+66,中文医学语言理解大模型,江苏盖睿健康科技有限公司,10.3,执行中,2026/2/1,2026/5/1,节点1,2026/5/1,10.3,10.3,10.3,0,
+67,微量元素强化TC4合金设计制备,中国科学院长春光学精密机械与物理研究所,4.62,执行中,2026/3/1,2027/3/1,节点1,2026/4/1,2.31,2.31,2.31,0,
+67,微量元素强化TC4合金设计制备,中国科学院长春光学精密机械与物理研究所,4.62,执行中,2026/3/1,2027/3/1,节点1,2027/4/1,2.31,0,0,0,
+68,钛合金元件采购合同,中国科学院长春光学精密机械与物理研究所,4.84,已完成,2026/3/13,2026/4/13,节点1,2026/4/13,4.84,4.84,4.84,0,
+69,视觉智能检测软件开发,哈尔滨菲涅尔科技有限公司,10,执行中,2025/12/12,2026/6/12,节点2,2026/6/10,3,0,0,0,
+69,视觉智能检测软件开发,哈尔滨菲涅尔科技有限公司,10,执行中,2025/12/12,2026/6/12,节点1,2026/6/22,7,0,0,0,
+70,高耐温导热硅脂的开发,锐腾新材料制造(苏州)有限公司,10,执行中,2026/4/1,2029/3/31,节点1,2029/3/31,10,0,0,0,
+71,**************,中国航发南方工业有限公司,195,执行中,2026/4/1,2027/4/1,节点2,2027/4/1,195,0,0,0,
+72,水导激光微流道结构优化技术开发,常州铭赛机器人科技股份有限公司,30,执行中,2026/4/1,2026/12/31,节点1,2026/4/30,10,10,10,0,
+72,水导激光微流道结构优化技术开发,常州铭赛机器人科技股份有限公司,30,执行中,2026/4/1,2026/12/31,节点2,2027/1/15,19,-2,-2,0,
+73,输电线路检修作业机器人方案研究及仿真验证,大连理工大学,15,执行中,2026/4/25,2026/6/25,节点1,2026/5/15,4.5,4.5,4.5,0,
+73,输电线路检修作业机器人方案研究及仿真验证,大连理工大学,15,执行中,2026/4/25,2026/6/25,节点2,2026/7/16,10.5,0,0,0,
+74,低压油气涡轮实验设备研发,上海晋弗机械科技有限公司,36.5,执行中,2025/12/20,2026/12/19,节点1,2026/12/19,36.5,0,0,0,
+75,低速离心风扇设计技术研发,来安县航飞机械设备有限公司,9,执行中,2026/3/20,2026/7/1,节点1,2026/3/31,1,0,0,1,
+75,低速离心风扇设计技术研发,来安县航飞机械设备有限公司,9,执行中,2026/3/20,2026/7/1,节点2,2026/7/15,8,0,0,1,
+76,基于E3的模化涡轮设计研发,南京航空航天大学,12.6,执行中,2026/5/8,2026/10/8,节点1,2026/5/31,3.78,0,0,3.78,
+76,基于E3的模化涡轮设计研发,南京航空航天大学,12.6,执行中,2026/5/8,2026/10/8,节点2,2026/10/31,8.82,0,0,3.78,
+77,某轴流压缩机样件加工合同,南京航空航天大学,8,执行中,2026/2/25,2027/5/25,节点1,2026/5/31,2.4,0,0,2.4,
+77,某轴流压缩机样件加工合同,南京航空航天大学,8,执行中,2026/2/25,2027/5/25,节点2,2027/5/25,5.6,0,0,2.4,
+78,电力场景多无人机巡检关键技术研究,哈尔滨铭丰嘉创科技有限公司,100,执行中,2026/5/15,2027/5/31,节点1,2026/5/31,30,0,0,30,
+78,电力场景多无人机巡检关键技术研究,哈尔滨铭丰嘉创科技有限公司,100,执行中,2026/5/15,2027/5/31,节点2,2027/2/28,40,0,0,30,
+78,电力场景多无人机巡检关键技术研究,哈尔滨铭丰嘉创科技有限公司,100,执行中,2026/5/15,2027/5/31,节点3,2027/5/31,30,0,0,30`;
+
+// ==================== DATE HELPERS ====================
+function parseDateToYM(d) {
+  if (!d) return '';
+  const parts = d.split('/');
+  if (parts.length === 3) return parts[0] + '-' + parts[1].padStart(2,'0');
+  return d.substring(0,7);
+}
+
+function parseDateObj(d) {
+  if (!d) return null;
+  const parts = d.split('/');
+  if (parts.length !== 3) return null;
+  const y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, day = parseInt(parts[2]);
+  return new Date(y, m, day);
+}
+
+function isNodeExpired(dateStr) {
+  const d = parseDateObj(dateStr);
+  if (!d) return false;
+  return d <= TODAY_DATE;
+}
+
+// ==================== OVERDUE CALC ====================
+// 逾期未开票 = Σ(应付金额 - 开票金额) for nodes whose date ≤ today
+function calcNodeOverdue(node) {
+  if (!isNodeExpired(node.date)) return 0;
+  return node.amount - node.invoiced;
+}
+
+function calcContractOverdue(contract) {
+  return contract.nodes.reduce((s, n) => s + calcNodeOverdue(n), 0);
+}
+
+// ==================== DATA PARSING ====================
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',');
+  const data = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',');
+    const row = {};
+    headers.forEach((h, j) => { row[h.trim()] = (vals[j] || '').trim(); });
+    data.push(row);
+  }
+  return data;
+}
+
+function buildContracts(rows) {
+  const map = new Map();
+  rows.forEach(r => {
+    const id = parseInt(r['合同序号']);
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        name: r['合同名称'],
+        company: r['对方单位'],
+        totalAmount: parseFloat(r['合同总额']) || 0,
+        status: r['合同状态'],
+        startDate: r['合同起始'],
+        endDate: r['合同截止'],
+        nodes: []
+      });
+    }
+    const c = map.get(id);
+    c.nodes.push({
+      name: r['节点'],
+      date: r['节点日期'],
+      amount: parseFloat(r['应付金额']) || 0,
+      received: parseFloat(r['实际到账']) || 0,
+      invoiced: parseFloat(r['开票金额']) || 0,
+      overdue: parseFloat(r['逾期未开票']) || 0,
+      remark: r['备注']
+    });
+  });
+  const contracts = Array.from(map.values());
+  recalcContracts(contracts);
+  return contracts;
+}
+
+function recalcContracts(contracts) {
+  contracts.forEach(c => {
+    c.totalDue = c.nodes.reduce((s,n) => s + n.amount, 0);
+    c.totalReceived = c.nodes.reduce((s,n) => s + n.received, 0);
+    c.totalInvoiced = c.nodes.reduce((s,n) => s + n.invoiced, 0);
+    c.totalOverdue = calcContractOverdue(c);
+    c.receiveRate = c.totalDue > 0 ? (c.totalReceived / c.totalDue * 100) : 0;
+    c.pending = c.totalDue - c.totalReceived;
+  });
+  return contracts;
+}
+
+// ==================== PERSISTENCE ====================
+const STORAGE_KEY = 'contract_manager_data';
+
+function saveData() {
+  try {
+    const data = contracts.map(c => ({
+      id: c.id, name: c.name, company: c.company, totalAmount: c.totalAmount,
+      status: c.status, startDate: c.startDate, endDate: c.endDate, nodes: c.nodes
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) { /* localStorage full or unavailable */ }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      contracts = recalcContracts(data);
+      return true;
+    }
+  } catch(e) { /* corrupted data, fall through */ }
+  return false;
+}
+
+// ==================== INIT ====================
+let currentFilter = 'all';
+let currentSearch = '';
+let detailContractId = null;
+
+function init() {
+  const loaded = loadData();
+  if (!loaded) {
+    const rows = parseCSV(SEED_DATA);
+    contracts = buildContracts(rows);
+    saveData();
+  }
+  document.getElementById('today-display').textContent = TODAY.getFullYear() + '-' +
+    String(TODAY.getMonth()+1).padStart(2,'0') + '-' + String(TODAY.getDate()).padStart(2,'0');
+  loadDashboard();
+}
+init();
+
+// ==================== HELPERS ====================
+function fmtMoney(n) {
+  if (n === 0) return '¥0';
+  if (Math.abs(n) >= 10000) return '¥' + (n/10000).toFixed(2) + '万';
+  return '¥' + n.toFixed(2);
+}
+function fmtDate(d) { return d || '--'; }
+function fmtRange(s, e) {
+  if (!s && !e) return '--';
+  return (s||'--') + ' ~ ' + (e||'--');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'info') + ' show';
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showConfirm(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = msg;
+  const btn = document.getElementById('confirm-btn');
+  const old = btn.onclick;
+  btn.onclick = function() { hideConfirm(); if (cb) cb(); };
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function hideConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+}
+
+function reloadAll() {
+  const page = document.querySelector('.nav-item.active').dataset.page;
+  loadDashboard();
+  if (page === 'list') loadContractList();
+  if (page === 'overdue') loadOverdue();
+}
+
+// ==================== DASHBOARD ====================
+function loadDashboard() {
+  const totalAmount = contracts.reduce((s,c) => s + c.totalAmount, 0);
+  const totalReceived = contracts.reduce((s,c) => s + c.totalReceived, 0);
+  const totalOverdue = contracts.reduce((s,c) => s + c.totalOverdue, 0);
+  const activeCount = contracts.filter(c => c.status === '执行中').length;
+  const doneCount = contracts.filter(c => c.status === '已完成').length;
+  const doneAmount = contracts.filter(c => c.status === '已完成').reduce((s,c) => s + c.totalAmount, 0);
+  const overdueCount = contracts.filter(c => c.totalOverdue > 0).length;
+
+  document.getElementById('stat-total').textContent = contracts.length;
+  document.getElementById('stat-active').textContent = activeCount;
+  document.getElementById('stat-amount').textContent = fmtMoney(totalAmount);
+  document.getElementById('stat-done-amount').textContent = fmtMoney(doneAmount);
+  document.getElementById('stat-received').textContent = fmtMoney(totalReceived);
+  document.getElementById('stat-rate').textContent = totalAmount > 0 ? (totalReceived/totalAmount*100).toFixed(1) + '%' : '0%';
+  document.getElementById('stat-overdue').textContent = fmtMoney(totalOverdue);
+  document.getElementById('stat-overdue-count').textContent = overdueCount;
+  document.getElementById('total-count').textContent = contracts.length;
+  document.getElementById('active-badge').textContent = activeCount;
+  document.getElementById('overdue-badge').textContent = overdueCount;
+
+  // Status chart
+  const ctx1 = document.getElementById('chart-status');
+  if (ctx1._chart) ctx1._chart.destroy();
+  if (contracts.length) {
+    ctx1._chart = new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['执行中', '已完成'],
+        datasets: [{ data: [activeCount, doneCount], backgroundColor: ['#4e7cff', '#b7eb8f'], borderWidth: 0, hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 13 } } } }
+      }
+    });
+  }
+
+  // Monthly trend
+  const monthlyMap = {};
+  contracts.forEach(c => {
+    c.nodes.forEach(n => {
+      if (n.received > 0) {
+        const ym = parseDateToYM(n.date);
+        if (ym) monthlyMap[ym] = (monthlyMap[ym] || 0) + n.received;
+      }
+    });
+  });
+  const sortedMonths = Object.keys(monthlyMap).sort().slice(-12);
+  const monthlyValues = sortedMonths.map(m => monthlyMap[m]);
+  const ctx2 = document.getElementById('chart-monthly');
+  if (ctx2._chart) ctx2._chart.destroy();
+  if (sortedMonths.length) {
+    ctx2._chart = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: sortedMonths,
+        datasets: [{ label: '到账金额(万元)', data: monthlyValues, backgroundColor: 'rgba(78,124,255,0.7)', borderRadius: 4, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => v + '万' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+
+  // Top 10
+  const top10 = [...contracts].sort((a,b) => b.totalAmount - a.totalAmount).slice(0,10);
+  document.getElementById('top10-table').innerHTML = top10.map(c => {
+    const pct = c.totalAmount > 0 ? (c.totalReceived/c.totalAmount*100).toFixed(0) : 0;
+    const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+    return `<tr class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td title="${c.name}">${c.name.length>30?c.name.substring(0,30)+'...':c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount">${fmtMoney(c.totalAmount)}</td>
+      <td class="amount">${fmtMoney(c.totalReceived)}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+      <td style="width:120px"><div style="background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px"></div></div><span style="font-size:11px;color:#888">${pct}%</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div><p>暂无合同数据</p></div></td></tr>';
+}
+
+// ==================== CONTRACT LIST ====================
+function loadContractList() {
+  let filtered = contracts;
+  if (currentFilter === '执行中') filtered = filtered.filter(c => c.status === '执行中');
+  if (currentFilter === '已完成') filtered = filtered.filter(c => c.status === '已完成');
+  if (currentFilter === 'overdue') filtered = filtered.filter(c => c.totalOverdue > 0);
+  if (currentSearch) {
+    const s = currentSearch.toLowerCase();
+    filtered = filtered.filter(c => c.name.toLowerCase().includes(s) || c.company.toLowerCase().includes(s));
+  }
+  document.getElementById('contract-table').innerHTML = filtered.map(c => {
+    const overdueClass = c.totalOverdue > 0 ? ' class="alert-row"' : '';
+    return `<tr${overdueClass} class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td title="${c.name}">${c.name.length>28?c.name.substring(0,28)+'...':c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount">${fmtMoney(c.totalAmount)}</td>
+      <td class="amount" style="color:#13c2c2">${fmtMoney(c.totalReceived)}</td>
+      <td class="amount" style="color:${c.totalOverdue>0?'#e74c3c':'#999'}">${fmtMoney(c.totalOverdue)}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+      <td style="font-size:12px;color:#888">${fmtRange(c.startDate, c.endDate)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8"><div class="empty-state"><div class="icon">📭</div><p>无匹配合同</p></div></td></tr>';
+}
+
+// ==================== OVERDUE ====================
+function loadOverdue() {
+  const overdue = contracts.filter(c => c.totalOverdue > 0).sort((a,b) => b.totalOverdue - a.totalOverdue);
+  document.getElementById('overdue-table').innerHTML = overdue.map(c => {
+    const expiredCount = c.nodes.filter(n => isNodeExpired(n.date)).length;
+    return `<tr class="clickable" onclick="openDetail(${c.id})">
+      <td>${c.id}</td>
+      <td>${c.name}</td>
+      <td>${c.company}</td>
+      <td class="amount" style="color:#e74c3c;font-weight:700">${fmtMoney(c.totalOverdue)}</td>
+      <td style="text-align:center">${expiredCount} / ${c.nodes.length}</td>
+      <td><span class="status-tag ${c.status==='执行中'?'active':'done'}">${c.status}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6"><div class="empty-state"><div class="icon">🎉</div><p>暂无逾期合同</p></div></td></tr>';
+}
+
+// ==================== DETAIL (EDITABLE) ====================
+function openDetail(id) {
+  const c = contracts.find(x => x.id === id);
+  if (!c) return;
+  detailContractId = id;
+
+  document.getElementById('detail-title').textContent = `#${c.id}`;
+
+  const pct = c.totalAmount > 0 ? (c.totalReceived/c.totalAmount*100).toFixed(0) : 0;
+  const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+
+  // Determine overdue nodes for highlighting
+  const expiredIndexes = new Set();
+  c.nodes.forEach((n, i) => { if (isNodeExpired(n.date)) expiredIndexes.add(i); });
+
+  const nodesHTML = c.nodes.map((n, i) => {
+    const nodeOverdue = calcNodeOverdue(n);
+    const isExpired = expiredIndexes.has(i);
+    const rowClass = isExpired && n.received <= 0 ? 'node-row-overdue' : '';
+    return `<tr class="${rowClass}">
+      <td><input class="edit-node-name" value="${n.name}" data-idx="${i}" style="min-width:50px"></td>
+      <td><input class="edit-node-date" value="${n.date}" data-idx="${i}" style="min-width:80px"></td>
+      <td><input class="edit-node-amount" type="number" step="0.01" value="${n.amount}" data-idx="${i}" style="min-width:70px;text-align:right"></td>
+      <td><input class="edit-node-received" type="number" step="0.01" value="${n.received}" data-idx="${i}" style="min-width:70px;text-align:right"></td>
+      <td><input class="edit-node-invoiced" type="number" step="0.01" value="${n.invoiced}" data-idx="${i}" style="min-width:70px;text-align:right"></td>
+      <td style="text-align:center"><span class="overdue-auto" data-idx="${i}" style="color:${nodeOverdue>0?'#e74c3c':nodeOverdue<0?'#fa8c16':'#999'}">${fmtMoney(nodeOverdue)}</span></td>
+      <td><input class="edit-node-remark" value="${n.remark}" data-idx="${i}" style="min-width:80px"></td>
+      <td style="text-align:center"><button class="action-btn danger" onclick="removeNode(${i})" style="padding:3px 8px;font-size:11px;">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-info-grid">
+      <div class="editable-field">
+        <div class="label">合同名称</div>
+        <input id="edit-name" value="${c.name}">
+      </div>
+      <div class="editable-field">
+        <div class="label">对方单位</div>
+        <input id="edit-company" value="${c.company}">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同总额（万元）</div>
+        <input id="edit-total" type="number" step="0.01" value="${c.totalAmount}">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同状态</div>
+        <select id="edit-status">
+          <option value="执行中" ${c.status==='执行中'?'selected':''}>执行中</option>
+          <option value="已完成" ${c.status==='已完成'?'selected':''}>已完成</option>
+        </select>
+      </div>
+      <div class="editable-field">
+        <div class="label">合同起始</div>
+        <input id="edit-start" value="${c.startDate}" placeholder="如 2025/1/1">
+      </div>
+      <div class="editable-field">
+        <div class="label">合同截止</div>
+        <input id="edit-end" value="${c.endDate}" placeholder="如 2025/12/31">
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h4>💰 收款进度</h4>
+        <span style="font-size:14px;font-weight:600;color:${barColor}" id="progress-summary">
+          ${fmtMoney(c.totalReceived)} / ${fmtMoney(c.totalAmount)} (${pct}%)
+        </span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill blue" id="progress-bar" style="width:${pct}%"></div></div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h4>📋 付款节点</h4>
+        <span style="font-size:12px;color:#999">
+          到期节点 <strong id="expired-count">${expiredIndexes.size}</strong> / ${c.nodes.length} ·
+          逾期未开票 <strong id="overdue-summary" style="color:${c.totalOverdue>0?'#e74c3c':c.totalOverdue<0?'#fa8c16':'#999'}">${fmtMoney(c.totalOverdue)}</strong>
+          （按今日日期自动计算已到期节点）
+        </span>
+      </div>
+      <div class="node-table-wrap">
+        <table class="node-table">
+          <thead>
+            <tr><th>节点名称</th><th>日期</th><th style="text-align:right">应付金额</th><th style="text-align:right">实际到账</th><th style="text-align:right">开票金额</th><th style="text-align:center">逾期未开票(自动)</th><th>备注</th><th style="width:40px"></th></tr>
+          </thead>
+          <tbody id="node-tbody">${nodesHTML}</tbody>
+        </table>
+      </div>
+      <button class="node-add-btn" onclick="addNode()">+ 添加节点</button>
+    </div>
+  `;
+
+  // Attach live update listeners to node inputs
+  document.querySelectorAll('.edit-node-amount, .edit-node-received, .edit-node-invoiced, .edit-node-date').forEach(el => {
+    el.addEventListener('input', function() { updateNodeOverdue(); updateProgress(); });
+  });
+  // Attach live update to contract total
+  document.getElementById('edit-total').addEventListener('input', updateProgress);
+  document.getElementById('edit-name').addEventListener('input', function() {
+    document.getElementById('detail-title').textContent = `#${detailContractId} ${this.value}`;
+  });
+
+  document.getElementById('detail-overlay').classList.add('show');
+}
+
+function updateNodeOverdue() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr');
+  let totalOverdue = 0;
+  let expiredCount = 0;
+  rows.forEach((tr, i) => {
+    const dateInput = tr.querySelector('.edit-node-date');
+    const amountInput = tr.querySelector('.edit-node-amount');
+    const invoicedInput = tr.querySelector('.edit-node-invoiced');
+    const overdueSpan = tr.querySelector('.overdue-auto');
+    if (!dateInput || !amountInput || !invoicedInput || !overdueSpan) return;
+
+    const dateVal = dateInput.value;
+    const amountVal = parseFloat(amountInput.value) || 0;
+    const invoicedVal = parseFloat(invoicedInput.value) || 0;
+
+    const isExpired = isNodeExpired(dateVal);
+    if (isExpired) expiredCount++;
+    const overdue = isExpired ? amountVal - invoicedVal : 0;
+    totalOverdue += overdue;
+
+    overdueSpan.textContent = fmtMoney(overdue);
+    overdueSpan.style.color = overdue > 0 ? '#e74c3c' : overdue < 0 ? '#fa8c16' : '#999';
+    tr.className = isExpired && (parseFloat(tr.querySelector('.edit-node-received').value)||0) <= 0 ? 'node-row-overdue' : '';
+  });
+
+  const expiredEl = document.getElementById('expired-count');
+  if (expiredEl) expiredEl.textContent = expiredCount;
+  const summaryEl = document.getElementById('overdue-summary');
+  if (summaryEl) {
+    summaryEl.textContent = fmtMoney(totalOverdue);
+    summaryEl.style.color = totalOverdue > 0 ? '#e74c3c' : totalOverdue < 0 ? '#fa8c16' : '#999';
+  }
+}
+
+function updateProgress() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr');
+  let totalReceived = 0;
+  let totalAmount = 0;
+  rows.forEach(tr => {
+    const amt = parseFloat(tr.querySelector('.edit-node-amount')?.value) || 0;
+    const recv = parseFloat(tr.querySelector('.edit-node-received')?.value) || 0;
+    totalAmount += amt;
+    totalReceived += recv;
+  });
+
+  // Also get contract total amount
+  const contractTotal = parseFloat(document.getElementById('edit-total').value) || 0;
+  const displayTotal = Math.max(contractTotal, totalAmount);
+  const pct = displayTotal > 0 ? (totalReceived/displayTotal*100).toFixed(0) : 0;
+  const barColor = pct >= 80 ? '#36cf67' : pct >= 40 ? '#4e7cff' : '#fa8c16';
+
+  const summary = document.getElementById('progress-summary');
+  if (summary) {
+    summary.textContent = `${fmtMoney(totalReceived)} / ${fmtMoney(displayTotal)} (${pct}%)`;
+    summary.style.color = barColor;
+  }
+  const bar = document.getElementById('progress-bar');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = `linear-gradient(90deg, ${barColor}, ${barColor}88)`;
+  }
+}
+
+function addNode() {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody) return;
+  const idx = tbody.children.length;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="edit-node-name" value="节点${idx+1}" data-idx="${idx}" style="min-width:50px"></td>
+    <td><input class="edit-node-date" value="" data-idx="${idx}" style="min-width:80px"></td>
+    <td><input class="edit-node-amount" type="number" step="0.01" value="0" data-idx="${idx}" style="min-width:70px;text-align:right"></td>
+    <td><input class="edit-node-received" type="number" step="0.01" value="0" data-idx="${idx}" style="min-width:70px;text-align:right"></td>
+    <td><input class="edit-node-invoiced" type="number" step="0.01" value="0" data-idx="${idx}" style="min-width:70px;text-align:right"></td>
+    <td style="text-align:center"><span class="overdue-auto" data-idx="${idx}" style="color:#999">¥0</span></td>
+    <td><input class="edit-node-remark" value="" data-idx="${idx}" style="min-width:80px"></td>
+    <td style="text-align:center"><button class="action-btn danger" onclick="removeNode(${idx})" style="padding:3px 8px;font-size:11px;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  // Attach listeners
+  tr.querySelectorAll('.edit-node-amount, .edit-node-received, .edit-node-invoiced, .edit-node-date').forEach(el => {
+    el.addEventListener('input', function() { updateNodeOverdue(); updateProgress(); });
+  });
+  updateNodeOverdue();
+  updateProgress();
+}
+
+function removeNode(idx) {
+  const tbody = document.getElementById('node-tbody');
+  if (!tbody || tbody.children.length <= 1) {
+    showToast('至少保留一个节点', 'error');
+    return;
+  }
+  showConfirm('删除节点', `确定要删除节点${idx+1}吗？`, () => {
+    tbody.children[idx].remove();
+    updateNodeOverdue();
+    updateProgress();
+  });
+}
+
+// ==================== ADD NEW CONTRACT ====================
+function addNewContract() {
+  const maxId = contracts.length > 0 ? Math.max(...contracts.map(c => c.id)) : 0;
+  const newId = maxId + 1;
+  const newContract = {
+    id: newId,
+    name: '新合同',
+    company: '',
+    totalAmount: 0,
+    status: '执行中',
+    startDate: '',
+    endDate: '',
+    nodes: [{ name: '节点1', date: '', amount: 0, received: 0, invoiced: 0, remark: '' }]
+  };
+  recalcContracts([newContract]);
+  contracts.push(newContract);
+  saveData();
+  reloadAll();
+  openDetail(newId);
+  showToast('已创建新合同，填写信息后点击保存', 'success');
+}
+
+// ==================== SAVE ====================
+function saveContractEdit() {
+  const id = detailContractId;
+  if (!id) return;
+
+  const name = document.getElementById('edit-name').value.trim();
+  const company = document.getElementById('edit-company').value.trim();
+  const totalAmount = parseFloat(document.getElementById('edit-total').value) || 0;
+  const status = document.getElementById('edit-status').value;
+  const startDate = document.getElementById('edit-start').value.trim();
+  const endDate = document.getElementById('edit-end').value.trim();
+
+  if (!name) { showToast('合同名称不能为空', 'error'); return; }
+
+  const tbody = document.getElementById('node-tbody');
+  const nodes = [];
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const nameEl = tr.querySelector('.edit-node-name');
+    const dateEl = tr.querySelector('.edit-node-date');
+    const amountEl = tr.querySelector('.edit-node-amount');
+    const receivedEl = tr.querySelector('.edit-node-received');
+    const invoicedEl = tr.querySelector('.edit-node-invoiced');
+    const remarkEl = tr.querySelector('.edit-node-remark');
+    if (nameEl) {
+      nodes.push({
+        name: nameEl.value,
+        date: dateEl.value,
+        amount: parseFloat(amountEl.value) || 0,
+        received: parseFloat(receivedEl.value) || 0,
+        invoiced: parseFloat(invoicedEl.value) || 0,
+        overdue: 0,
+        remark: remarkEl.value
+      });
+    }
+  });
+
+  if (nodes.length === 0) { showToast('至少需要一个节点', 'error'); return; }
+
+  const c = contracts.find(x => x.id === id);
+  if (!c) { showToast('合同不存在', 'error'); return; }
+
+  c.name = name;
+  c.company = company;
+  c.totalAmount = totalAmount;
+  c.status = status;
+  c.startDate = startDate;
+  c.endDate = endDate;
+  c.nodes = nodes;
+  recalcContracts([c]);
+  saveData();
+
+  closeDetail();
+  reloadAll();
+  showToast(`合同 #${id} 已保存`, 'success');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('show');
+  detailContractId = null;
+}
+
+// ==================== DELETE ====================
+function confirmDeleteContract() {
+  const id = detailContractId;
+  if (!id) return;
+  showConfirm('确认删除', `确定要删除合同 #${id} 吗？删除后数据不可恢复。`, () => {
+    contracts = contracts.filter(c => c.id !== id);
+    saveData();
+    closeDetail();
+    reloadAll();
+    showToast(`合同 #${id} 已删除`, 'success');
+  });
+}
+
+function confirmClear() {
+  if (!contracts.length) { showToast('暂无数据可清空', 'info'); return; }
+  showConfirm('⚠️ 清空所有数据', `确定要清空全部 ${contracts.length} 份合同数据吗？此操作不可恢复！`, () => {
+    contracts = [];
+    saveData();
+    reloadAll();
+    showToast('所有合同数据已清空', 'success');
+  });
+}
+
+// ==================== IMPORT ====================
+document.getElementById('import-file').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const rows = parseCSV(ev.target.result);
+      if (!rows.length) { showToast('CSV文件为空或格式不正确', 'error'); return; }
+      const imported = buildContracts(rows);
+      if (!imported.length) { showToast('未能解析出有效合同数据', 'error'); return; }
+      contracts = imported;
+      saveData();
+      reloadAll();
+      showToast(`成功导入 ${imported.length} 份合同数据`, 'success');
+    } catch(err) { showToast('导入失败：' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+// ==================== EXPORT ====================
+function exportCSV(mode) {
+  if (!contracts.length) { showToast('暂无数据可导出', 'info'); return; }
+  let rows = [];
+  contracts.forEach(c => {
+    c.nodes.forEach(n => {
+      rows.push([c.id, c.name, c.company, c.totalAmount, c.status, c.startDate, c.endDate, n.name, n.date, n.amount, n.received, n.invoiced, n.remark]);
+    });
+  });
+  const headers = '合同序号,合同名称,对方单位,合同总额,合同状态,合同起始,合同截止,节点,节点日期,应付金额,实际到账,开票金额,备注';
+  const csvContent = headers + '\n' + rows.map(r => r.join(',')).join('\n');
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const ts = TODAY.getFullYear() + '-' + String(TODAY.getMonth()+1).padStart(2,'0') + '-' + String(TODAY.getDate()).padStart(2,'0');
+  a.download = mode === 'overdue' ? `逾期合同清单_${ts}.csv` : `合同数据_${ts}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`已导出${mode==='overdue'?'逾期清单':'全部合同数据'}`, 'success');
+}
+
+// ==================== NAVIGATION ====================
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  const titles = { dashboard: '📊 工作台', list: '📑 合同列表', overdue: '⚠️ 逾期预警' };
+  document.getElementById('page-title').textContent = titles[page];
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'list') loadContractList();
+  if (page === 'overdue') loadOverdue();
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchPage(item.dataset.page));
+});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter;
+    loadContractList();
+  });
+});
+document.getElementById('search-input').addEventListener('input', function() {
+  currentSearch = this.value;
+  loadContractList();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetail();
+});
+</script>
+</body>
+</html>
