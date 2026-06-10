@@ -409,13 +409,13 @@ function internalToDb(c) {
 
 async function loadContracts() {
   try {
-    const { data, error } = await supabase.from('contracts').select('*');
+    const { data, error } = await supabase.from('contracts').select('*').order('contract_no', { ascending: false });
     if (error) throw error;
     contracts = (data || []).map(dbToInternal);
-    reloadAll();
   } catch (err) {
-    showToast('加载数据失败: ' + err.message, 'error');
+    console.error('Load error:', err);
   }
+  reloadAll();
 }
 
 async function saveContract(c) {
@@ -432,12 +432,19 @@ async function deleteContract(id) {
 
 async function replaceAllContracts(list) {
   // Delete all then insert
-  const { error: delErr } = await supabase.from('contracts').delete().neq('id', 0);
-  if (delErr) throw delErr;
+  const ids = list.map(c => String(c.id));
+  if (contracts.length > 0) {
+    const { error: delErr } = await supabase.from('contracts').delete().neq('id', 0);
+    if (delErr) throw delErr;
+  }
   if (list.length === 0) return;
   const dbList = list.map(internalToDb);
-  const { error: insErr } = await supabase.from('contracts').insert(dbList);
-  if (insErr) throw insErr;
+  // Insert in batches of 20 to avoid payload issues
+  for (let i = 0; i < dbList.length; i += 20) {
+    const batch = dbList.slice(i, i + 20);
+    const { error: insErr } = await supabase.from('contracts').insert(batch);
+    if (insErr) throw insErr;
+  }
 }
 
 // ==================== REALTIME ====================
@@ -543,6 +550,9 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 let confirmCallback = null;
+function confirmDefaultHandler() {
+  if (confirmCallback) { confirmCallback(); hideConfirm(); }
+}
 function showConfirm(title, msg, cb) {
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-message').textContent = msg;
@@ -553,16 +563,14 @@ function hideConfirm() {
   document.getElementById('confirm-overlay').classList.remove('show');
   confirmCallback = null;
 }
-document.getElementById('confirm-btn').addEventListener('click', function() {
-  if (confirmCallback) confirmCallback();
-  hideConfirm();
-});
+document.getElementById('confirm-btn').addEventListener('click', confirmDefaultHandler);
 
 function reloadAll() {
+  updateBadges();
+  // Always render all pages with current data
   loadDashboard();
   loadContractList();
   loadOverdue();
-  updateBadges();
 }
 
 function updateBadges() {
@@ -982,18 +990,49 @@ function addNewContract() {
 // ==================== CLEAR ====================
 function confirmClear() {
   if (!contracts.length) { showToast('暂无数据可清空', 'info'); return; }
-  showConfirm('⚠️ 二次确认', `确定要清空全部 ${contracts.length} 份合同吗？此操作不可恢复！`, async () => {
-    showConfirm('⚠️ 再次确认', `请输入 YES 确认清空全部 ${contracts.length} 份合同`, async () => {
-      try {
-        await replaceAllContracts([]);
-        contracts = [];
-        reloadAll();
-        showToast('所有合同已清空', 'success');
-      } catch (err) {
-        showToast('清空失败: ' + err.message, 'error');
-      }
-    });
-  });
+  // Step 1
+  document.getElementById('confirm-title').textContent = '⚠️ 二次确认';
+  document.getElementById('confirm-message').textContent = `确定要清空全部 ${contracts.length} 份合同吗？此操作不可恢复！`;
+  document.getElementById('confirm-btn').textContent = '下一步';
+  document.getElementById('confirm-overlay').classList.add('show');
+  // Remove default handler to prevent auto-hide
+  document.getElementById('confirm-btn').removeEventListener('click', confirmDefaultHandler);
+  document.getElementById('confirm-btn').addEventListener('click', clearStep1);
+  document.getElementById('confirm-overlay').onclick = function(e) {
+    if (e.target === this) { clearCleanup(); hideConfirm(); }
+  };
+}
+
+async function clearStep1() {
+  document.getElementById('confirm-btn').removeEventListener('click', clearStep1);
+  document.getElementById('confirm-title').textContent = '⚠️ 最终确认';
+  document.getElementById('confirm-message').textContent = `再次确认：是否清空全部 ${contracts.length} 份合同？数据不可恢复！`;
+  document.getElementById('confirm-btn').textContent = '确认清空';
+  document.getElementById('confirm-btn').addEventListener('click', clearStep2);
+}
+
+async function clearStep2() {
+  document.getElementById('confirm-btn').removeEventListener('click', clearStep2);
+  hideConfirm();
+  clearCleanup();
+  try {
+    await replaceAllContracts([]);
+    contracts = [];
+    reloadAll();
+    showToast('所有合同已清空', 'success');
+  } catch (err) {
+    showToast('清空失败: ' + err.message, 'error');
+  }
+}
+
+function clearCleanup() {
+  document.getElementById('confirm-btn').removeEventListener('click', clearStep1);
+  document.getElementById('confirm-btn').removeEventListener('click', clearStep2);
+  document.getElementById('confirm-btn').addEventListener('click', confirmDefaultHandler);
+  document.getElementById('confirm-btn').textContent = '确定';
+  document.getElementById('confirm-overlay').onclick = function(e) {
+    if (e.target === this) hideConfirm();
+  };
 }
 
 // ==================== IMPORT ====================
@@ -1048,7 +1087,11 @@ function init() {
   document.getElementById('today-display').textContent =
     TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
   setupRealtime();
-  loadContracts();
+  // Initial data load, will call reloadAll() on completion
+  loadContracts().catch(e => {
+    console.error('Initial load failed:', e);
+    reloadAll(); // show empty state
+  });
 }
 
 document.querySelectorAll('.nav-item').forEach(item => {
