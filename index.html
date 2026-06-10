@@ -317,7 +317,9 @@ $('import-file').onchange=function(e){
         if(!lines[i].trim())continue;
         var vl=lines[i].split(','); var row={}; hd.forEach(function(h,j){row[h.trim()]=(vl[j]||'').trim();});
         var idx=parseInt(row['合同序号']); if(!idx)continue;
-        if(!map[idx])map[idx]={id:idx,name:row['合同名称']||'',company:row['对方单位']||'',totalAmount:parseFloat(row['合同总额'])||0,status:row['合同状态']||'进行中',startDate:row['合同起始']||'',endDate:row['合同截止']||'',notes:row['备注']||'',nodes:[]};
+        var rawStatus=row['合同状态']||'进行中';
+        var mapStatus=rawStatus==='已完成'?'已结束':(rawStatus==='执行中'?'进行中':rawStatus);
+        if(!map[idx])map[idx]={id:idx,name:row['合同名称']||'',company:row['对方单位']||'',totalAmount:parseFloat(row['合同总额'])||0,status:mapStatus,startDate:row['合同起始']||'',endDate:row['合同截止']||'',notes:row['备注']||'',nodes:[]};
         map[idx].nodes.push({name:row['节点']||'',date:row['节点日期']||'',amount:parseFloat(row['应付金额'])||0,received:parseFloat(row['实际到账'])||0,invoiced:parseFloat(row['开票金额'])||0,overdue:0,remark:''});
       }
       var imported=Object.values(map).map(function(c){
