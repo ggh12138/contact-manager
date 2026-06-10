@@ -172,7 +172,7 @@ function db2c(d) {
   return c;
 }
 function c2db(c) {
-  return { contract_no:String(c.id), contract_name:c.name, party_b:c.company, amount:c.totalAmount, sign_date:c.startDate, end_date:c.endDate, status:c.status, notes:c.notes||'', milestones:(c.nodes||[]).map(function(n){return{milestone_name:n.name||'',milestone_date:n.date||'',payable_amount:n.amount||0,received_amount:n.received||0,invoiced_amount:n.invoiced||0,remark:n.remark||''};}), total_receivable:c.totalDue||0, total_received:c.totalReceived||0, total_invoiced:c.totalInvoiced||0 };
+  return { contract_no:String(c.id), contract_name:c.name, party_b:c.company, amount:c.totalAmount, sign_date:c.startDate||null, end_date:c.endDate||null, status:c.status, notes:c.notes||'', milestones:(c.nodes||[]).map(function(n){return{milestone_name:n.name||'',milestone_date:n.date||null,payable_amount:n.amount||0,received_amount:n.received||0,invoiced_amount:n.invoiced||0,remark:n.remark||''};}), total_receivable:c.totalDue||0, total_received:c.totalReceived||0, total_invoiced:c.totalInvoiced||0 };
 }
 function dateObj(d) { if(!d)return null; var p=d.split('/'); return p.length===3?new Date(+p[0],+p[1]-1,+p[2]):null; }
 function expired(d) { var o=dateObj(d); return o ? o<=new Date(new Date().toDateString()) : false; }
