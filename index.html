@@ -308,7 +308,10 @@ function detailSave(){
   c.name=$('en').value.trim(); c.company=$('ec').value.trim(); c.team=$('et').value.trim(); c.manager=$('em').value.trim(); c.totalAmount=+($('ea').value)||0; c.status=$('es').value; c.startDate=$('est').value.trim(); c.endDate=$('eed').value.trim();
   var ns=[]; D.querySelectorAll('#nb tr').forEach(function(r){ns.push({name:(r.querySelector('.dn')||{}).value||'',date:(r.querySelector('.dd')||{}).value||'',amount:+((r.querySelector('.da')||{}).value)||0,received:+((r.querySelector('.dr')||{}).value)||0,invoiced:+((r.querySelector('.di')||{}).value)||0,overdue:0,remark:(r.querySelector('.drk')||{}).value||''});});
   c.nodes=ns; c.totalDue=ns.reduce(function(s,n){return s+n.amount;},0); c.totalReceived=ns.reduce(function(s,n){return s+n.received;},0); c.totalInvoiced=ns.reduce(function(s,n){return s+n.invoiced;},0); c.totalOverdue=ns.reduce(function(s,n){return s+(expired(n.date)?(n.amount-n.invoiced):0);},0);
-  if(newId!==c.id){
+  if(c._new){c._new=undefined; // New contract: POST to insert
+    var db=c2db(c);
+    sb('/contracts',{method:'POST',body:JSON.stringify(db)}).then(function(){toast('已保存','success');detailHide();render();}).catch(function(e){toast('保存失败: '+e.message,'error');});
+  }else if(newId!==c.id){
     // ID changed: delete old, insert new
     var db=c2db(c); db.contract_no=String(newId);
     var oldId=c.id; c.id=newId; editId=newId;
@@ -329,6 +332,7 @@ $('btn-add').onclick=function(){
   var mx=0; contracts.forEach(function(c){if(c.id>mx)mx=c.id;});
   var c={id:mx+1,name:'新合同',company:'',totalAmount:0,status:'进行中',startDate:'',endDate:'',notes:'',nodes:[{name:'节点1',date:'',amount:0,received:0,invoiced:0,overdue:0,remark:''}]};
   c.totalDue=0;c.totalReceived=0;c.totalInvoiced=0;c.totalOverdue=0;
+  c._new=true; // mark as not yet saved to DB
   contracts.push(c); openDetail(c.id);
 };
 
